@@ -5,6 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
+// Cores extraídas do seu arquivo styles.css
+abstract class AppColors {
+  static const Color primaria = Color(0xFF4F46E5);
+  static const Color fundo = Color(0xFFF8FAFC);
+  static const Color container = Color(0xFFFFFFFF);
+  static const Color texto = Color(0xFF1E293B);
+  static const Color textoSuave = Color(0xFF64748B);
+  static const Color sucesso = Color(0xFF10B981);
+  static const Color erro = Color(0xFFEF4444);
+  static const Color borda = Color(0xFFE2E8F0);
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -20,11 +32,30 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Controle Financeiro',
+      debugShowCheckedModeBanner: false, // Remove a faixa de "Debug"
       theme: ThemeData(
-        primarySwatch: Colors.indigo,
-        useMaterial3: true, // Adicionado para um visual mais moderno
+        scaffoldBackgroundColor: AppColors.fundo,
+        primaryColor: AppColors.primaria,
+        fontFamily: 'Inter', // Fonte que você usa no site
+        colorScheme: const ColorScheme.light(
+          primary: AppColors.primaria,
+          secondary: AppColors.sucesso,
+          error: AppColors.erro,
+          surface: AppColors.container,
+          onSurface: AppColors.texto,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.fundo,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            color: AppColors.texto,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          iconTheme: IconThemeData(color: AppColors.textoSuave),
+        ),
+        useMaterial3: true,
       ),
-      // A mágica acontece aqui! O AuthGate decide o que mostrar.
       home: const AuthGate(),
     );
   }
