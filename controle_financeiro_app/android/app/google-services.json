@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "469665350572",
+    "project_id": "meu-controle-financeiro-f2cdb",
+    "storage_bucket": "meu-controle-financeiro-f2cdb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:469665350572:android:04e8da086626cd20ba7009",
+        "android_client_info": {
+          "package_name": "com.example.controle_financeiro_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "469665350572-5atlfphm0i7dhucm2sju4guf6j3ju0s2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJWvl28U_o9Fe_oR5TKaZc92jO-te3K4w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "469665350572-5atlfphm0i7dhucm2sju4guf6j3ju0s2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
