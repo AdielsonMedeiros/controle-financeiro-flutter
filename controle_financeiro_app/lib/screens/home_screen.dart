@@ -3,8 +3,9 @@
 import 'package:controle_financeiro_app/main.dart';
 import 'package:controle_financeiro_app/models/financial_transaction.dart';
 import 'package:controle_financeiro_app/services/firestore_service.dart';
-import 'package:controle_financeiro_app/widgets/add_transaction_form.dart'; // Importa o formulário
+import 'package:controle_financeiro_app/widgets/add_transaction_form.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -24,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_user == null) {
       return const Scaffold(body: Center(child: Text("Usuário não encontrado.")));
     }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Visão Geral'),
@@ -54,13 +54,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Ação para abrir o modal com o formulário
           showModalBottomSheet(
             context: context,
-            isScrollControlled: true, // Permite que o modal cresça com o teclado
-            builder: (ctx) {
-              return const AddTransactionForm();
-            },
+            isScrollControlled: true,
+            builder: (ctx) => const AddTransactionForm(),
           );
         },
         backgroundColor: AppColors.primaria,
@@ -70,14 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDashboard(List<FinancialTransaction> transactions) {
-    // ... (o resto do arquivo não precisa de alterações)
-    double totalIncome = transactions
-        .where((t) => t.type == 'income')
-        .fold(0, (sum, item) => sum + item.amount);
-    double totalExpenses = transactions
-        .where((t) => t.type == 'expense')
-        .fold(0, (sum, item) => sum + item.amount);
+    double totalIncome = transactions.where((t) => t.type == 'income').fold(0, (sum, item) => sum + item.amount);
+    double totalExpenses = transactions.where((t) => t.type == 'expense').fold(0, (sum, item) => sum + item.amount);
     double balance = totalIncome - totalExpenses;
+    final expenseTransactions = transactions.where((t) => t.type == 'expense').toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
@@ -88,6 +81,13 @@ class _HomeScreenState extends State<HomeScreen> {
         _buildSummaryCards(totalIncome, totalExpenses, balance),
         const SizedBox(height: 24),
         Text(
+          'Análise de Despesas',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        _buildExpenseChart(expenseTransactions, totalExpenses), // Passando o total de despesas
+        const SizedBox(height: 24),
+        Text(
           'Histórico de Transações',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
@@ -96,7 +96,66 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+  
+  Widget _buildExpenseChart(List<FinancialTransaction> expenseTransactions, double totalExpenses) {
+    if (expenseTransactions.isEmpty) {
+      return Container(
+        height: 250,
+        alignment: Alignment.center,
+        child: const Text('Nenhuma despesa para analisar.', style: TextStyle(color: AppColors.textoSuave)),
+      );
+    }
+    final Map<String, double> categoryTotals = {};
+    for (var transaction in expenseTransactions) {
+      categoryTotals.update(transaction.category, (value) => value + transaction.amount, ifAbsent: () => transaction.amount);
+    }
+    
+    final List<Color> chartColors = [
+      AppColors.erro.withOpacity(0.9), AppColors.primaria.withOpacity(0.8), Colors.amber.shade400,
+      Colors.cyan.shade400, Colors.purple.shade400, Colors.orange.shade400
+    ];
 
+    return SizedBox(
+      height: 250,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          PieChart(
+            PieChartData(
+              sectionsSpace: 3,
+              centerSpaceRadius: 80,
+              sections: List.generate(categoryTotals.length, (i) {
+                final entry = categoryTotals.entries.elementAt(i);
+                final percentage = (entry.value / totalExpenses * 100);
+                return PieChartSectionData(
+                  color: chartColors[i % chartColors.length],
+                  value: entry.value,
+                  title: '${percentage.toStringAsFixed(0)}%',
+                  radius: 40,
+                  titleStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                );
+              }),
+            ),
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("Total Gasto", style: TextStyle(color: AppColors.textoSuave, fontSize: 16)),
+              Text(
+                NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(totalExpenses),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+  
   Widget _buildUserInfoHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -119,12 +178,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Bem-vindo de volta!',
-                    style: TextStyle(color: AppColors.textoSuave)),
+                const Text('Bem-vindo de volta!', style: TextStyle(color: AppColors.textoSuave)),
                 Text(
                   _user?.email ?? 'Usuário',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, color: AppColors.texto),
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.texto),
                 ),
               ],
             ),
@@ -141,22 +198,15 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Icon(Icons.receipt_long, size: 60, color: AppColors.textoSuave),
           SizedBox(height: 16),
-          Text(
-            "Nenhuma transação encontrada.",
-            style: TextStyle(fontSize: 18, color: AppColors.textoSuave),
-          ),
+          Text("Nenhuma transação encontrada.", style: TextStyle(fontSize: 18, color: AppColors.textoSuave)),
           SizedBox(height: 8),
-          Text(
-            "Clique no botão '+' para adicionar.",
-            style: TextStyle(color: AppColors.textoSuave),
-          ),
+          Text("Clique no botão '+' para adicionar.", style: TextStyle(color: AppColors.textoSuave)),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryCards(
-      double income, double expenses, double balance) {
+  Widget _buildSummaryCards(double income, double expenses, double balance) {
     return GridView(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
@@ -167,14 +217,9 @@ class _HomeScreenState extends State<HomeScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
-        _SummaryCard(
-            title: 'Receitas', amount: income, color: AppColors.sucesso),
-        _SummaryCard(
-            title: 'Despesas', amount: expenses, color: AppColors.erro),
-        _SummaryCard(
-            title: 'Saldo',
-            amount: balance,
-            color: balance >= 0 ? AppColors.sucesso : AppColors.erro),
+        _SummaryCard(title: 'Receitas', amount: income, color: AppColors.sucesso),
+        _SummaryCard(title: 'Despesas', amount: expenses, color: AppColors.erro),
+        _SummaryCard(title: 'Saldo', amount: balance, color: balance >= 0 ? AppColors.sucesso : AppColors.erro),
       ],
     );
   }
@@ -194,8 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (context, index) {
           final transaction = transactions[index];
           final isIncome = transaction.type == 'income';
-          final formatter =
-              NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+          final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
           return Dismissible(
             key: Key(transaction.id),
@@ -261,8 +305,7 @@ class _SummaryCard extends StatelessWidget {
             fit: BoxFit.scaleDown,
             child: Text(
               formatter.format(amount),
-              style: TextStyle(
-                  color: color, fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
         ],

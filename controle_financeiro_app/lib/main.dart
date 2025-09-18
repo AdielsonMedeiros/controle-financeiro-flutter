@@ -4,6 +4,7 @@ import 'package:controle_financeiro_app/screens/auth_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:intl/date_symbol_data_local.dart'; // ✅ IMPORTAÇÃO CORRIGIDA
 
 // Cores extraídas do seu arquivo styles.css
 abstract class AppColors {
@@ -19,6 +20,7 @@ abstract class AppColors {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('pt_BR', null);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -32,11 +34,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Controle Financeiro',
-      debugShowCheckedModeBanner: false, // Remove a faixa de "Debug"
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         scaffoldBackgroundColor: AppColors.fundo,
         primaryColor: AppColors.primaria,
-        fontFamily: 'Inter', // Fonte que você usa no site
+        fontFamily: 'Inter',
         colorScheme: const ColorScheme.light(
           primary: AppColors.primaria,
           secondary: AppColors.sucesso,

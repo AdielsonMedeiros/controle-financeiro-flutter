@@ -2,13 +2,15 @@
 
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:controle_financeiro_app/models/budget.dart'; // Importa o modelo de Orçamento
 import 'package:controle_financeiro_app/models/financial_transaction.dart';
 import 'package:rxdart/rxdart.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Busca todas as transações (gastos e receitas) de um usuário
+  // --- MÉTODOS DE TRANSAÇÕES (JÁ EXISTENTES) ---
+
   Stream<List<FinancialTransaction>> getTransactionsStream(String userId) {
     final expensesStream = _db
         .collection('users')
@@ -28,17 +30,14 @@ class FirestoreService {
             .map((doc) => FinancialTransaction.fromFirestore(doc, 'income'))
             .toList());
 
-    // Combina os dois streams em um só e ordena pela data
     return Rx.combineLatest2(expensesStream, incomesStream,
         (List<FinancialTransaction> expenses, List<FinancialTransaction> incomes) {
       final combinedList = [...expenses, ...incomes];
-      // Ordena a lista combinada, da transação mais recente para a mais antiga
       combinedList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return combinedList;
     });
   }
 
-  // Função para deletar uma transação
   Future<void> deleteTransaction(String userId, FinancialTransaction transaction) async {
     final collectionName =
         transaction.type == 'expense' ? 'gastos' : 'receitas';
@@ -50,13 +49,11 @@ class FirestoreService {
         .delete();
   }
 
-  // Função para adicionar uma nova transação
   Future<void> addTransaction(
       String userId, Map<String, dynamic> transactionData) async {
     final collectionName =
         transactionData['type'] == 'expense' ? 'gastos' : 'receitas';
 
-    // Adiciona a data de criação no momento em que a transação chega no servidor
     transactionData['createdAt'] = FieldValue.serverTimestamp();
 
     await _db
@@ -64,5 +61,27 @@ class FirestoreService {
         .doc(userId)
         .collection(collectionName)
         .add(transactionData);
+  }
+
+  // --- NOVOS MÉTODOS DE ORÇAMENTO (ADICIONAR) ---
+
+  Stream<Budget> getBudgetsStream(String userId) {
+    return _db
+        .collection('users')
+        .doc(userId)
+        .collection('orcamentos')
+        .doc('mensal')
+        .snapshots()
+        .map((doc) =>
+            doc.exists ? Budget.fromFirestore(doc.data()!) : Budget(categories: {}));
+  }
+
+  Future<void> saveBudgets(String userId, Map<String, double> budgets) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .collection('orcamentos')
+        .doc('mensal')
+        .set(budgets, SetOptions(merge: true));
   }
 }
