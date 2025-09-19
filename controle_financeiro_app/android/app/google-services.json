@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "469665350572-0i9pvqstt117reobuagrunantlfu45ad.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.controle_financeiro_app",
+            "certificate_hash": "d7e5c945f4c33414ca544b82d5548534cba55f33"
+          }
+        },
+        {
           "client_id": "469665350572-5atlfphm0i7dhucm2sju4guf6j3ju0s2.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +37,13 @@
             {
               "client_id": "469665350572-5atlfphm0i7dhucm2sju4guf6j3ju0s2.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "469665350572-gjkurdpnh7orb188smgpnmof19a4vsi6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.controleFinanceiroApp"
+              }
             }
           ]
         }
