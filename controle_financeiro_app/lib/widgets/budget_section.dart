@@ -71,7 +71,7 @@ class _BudgetSectionState extends State<BudgetSection> {
     if (_userId == null) return const SizedBox.shrink();
 
     return StreamBuilder<Budget>(
-      stream: _firestoreService.getBudgetsStream(_userId!),
+      stream: _firestoreService.getBudgetsStream(_userId),
       builder: (context, snapshot) {
         // --- CORREÇÃO DO ERRO 1: Verificação correta do estado da conexão ---
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -123,7 +123,7 @@ class _BudgetSectionState extends State<BudgetSection> {
                 isOverBudget,
                 _budgetControllers[category]!,
               );
-            }).toList(),
+            }),
             const SizedBox(height: 16),
             if (_isLoading)
               const Center(child: CircularProgressIndicator())

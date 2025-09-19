@@ -1,8 +1,7 @@
-// lib/screens/auth_screen.dart
-
 import 'package:controle_financeiro_app/services/auth_service.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Importe o FirebaseAuth
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -19,9 +18,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _passwordController = TextEditingController();
   final _authService = AuthService();
 
-  // Função para lidar com o clique no botão (VERSÃO ATUALIZADA)
   Future<void> _submitAuthForm() async {
-    // Validação básica
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, preencha todos os campos.')),
@@ -46,42 +43,9 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       }
     } on FirebaseAuthException catch (e) {
-      // Traduz o código de erro técnico para uma mensagem amigável
-      String message = 'Ocorreu um erro inesperado.';
-      
-      switch (e.code) {
-        case 'email-already-in-use':
-          message = 'Este e-mail já está cadastrado. Tente fazer o login.';
-          break;
-        case 'weak-password':
-          message = 'A senha é muito fraca. Tente uma senha mais forte.';
-          break;
-        case 'invalid-email':
-          message = 'O formato do e-mail é inválido.';
-          break;
-        case 'user-not-found':
-          message = 'Nenhum usuário encontrado com este e-mail.';
-          break;
-        case 'wrong-password':
-          message = 'A senha está incorreta.';
-          break;
-      }
-      
-      // Mostra a mensagem amigável na tela
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      _handleAuthError(e);
     } catch (e) {
-      // Tratamento para qualquer outro tipo de erro
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Ocorreu um erro. Tente novamente.'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      _showErrorSnackbar('Ocorreu um erro. Tente novamente.');
     }
 
     if (mounted) {
@@ -89,6 +53,61 @@ class _AuthScreenState extends State<AuthScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _submitSocialLogin(Future<void> Function() loginMethod) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await loginMethod();
+    } on FirebaseAuthException catch (e) {
+      _handleAuthError(e);
+    } catch (e) {
+      _showErrorSnackbar('Ocorreu um erro durante o login social.');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _handleAuthError(FirebaseAuthException e) {
+    String message = 'Ocorreu um erro inesperado.';
+    switch (e.code) {
+      case 'email-already-in-use':
+        message = 'Este e-mail já está cadastrado. Tente fazer o login.';
+        break;
+      case 'weak-password':
+        message = 'A senha é muito fraca. Tente uma senha mais forte.';
+        break;
+      case 'invalid-email':
+        message = 'O formato do e-mail é inválido.';
+        break;
+      case 'user-not-found':
+        message = 'Nenhum usuário encontrado com este e-mail.';
+        break;
+      case 'wrong-password':
+        message = 'A senha está incorreta.';
+        break;
+      case 'account-exists-with-different-credential':
+        message =
+            'Já existe uma conta com este e-mail, mas com outro método de login.';
+        break;
+    }
+    _showErrorSnackbar(message);
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
   }
 
   @override
@@ -102,8 +121,15 @@ class _AuthScreenState extends State<AuthScreen> {
             children: [
               Text(
                 _isLoginView ? 'Login' : 'Registrar',
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               ),
+              const SizedBox(height: 8),
+              if (_isLoginView)
+                Text(
+                  'Por favor, faça o login para continuar.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
               const SizedBox(height: 40),
               TextFormField(
                 controller: _emailController,
@@ -126,23 +152,61 @@ class _AuthScreenState extends State<AuthScreen> {
               if (_isLoading)
                 const CircularProgressIndicator()
               else
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _submitAuthForm,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _submitAuthForm,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor:
+                              const Color(0xFF4F46E5),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text(_isLoginView ? 'Login' : 'Criar Conta'),
+                      ),
                     ),
-                    child: Text(_isLoginView ? 'Entrar' : 'Criar Conta'),
-                  ),
+                    if (_isLoginView) ...[
+                      const SizedBox(height: 24),
+                      const Text('Ou entre com'),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            onPressed: () =>
+                                _submitSocialLogin(_authService.signInWithGoogle),
+                            icon: Image.asset( 
+                              'assets/gmail.png', 
+                              height: 32,
+                            ),
+                            iconSize: 40,
+                          ),
+                          const SizedBox(width: 24),
+                          IconButton(
+                            onPressed: () =>
+                                _submitSocialLogin(_authService.signInWithGitHub),
+                            icon: Image.asset( 
+                              'assets/github.png', 
+                              height: 32,
+                            ),
+                            iconSize: 40,
+                          ),
+                        ],
+                      )
+                    ]
+                  ],
                 ),
               const SizedBox(height: 20),
               TextButton(
-                onPressed: _isLoading ? null : () {
-                  setState(() {
-                    _isLoginView = !_isLoginView;
-                  });
-                },
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        setState(() {
+                          _isLoginView = !_isLoginView;
+                        });
+                      },
                 child: Text(
                   _isLoginView
                       ? 'Não tem uma conta? Registre-se'
@@ -156,3 +220,4 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 }
+

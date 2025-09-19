@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: StreamBuilder<List<FinancialTransaction>>(
-        stream: _firestoreService.getTransactionsStream(_user!.uid),
+        stream: _firestoreService.getTransactionsStream(_user.uid),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -144,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("Total Gasto", style: TextStyle(color: AppColors.textoSuave, fontSize: 16)),
+              const Text("Total Gasto", style: TextStyle(color: AppColors.textoSuave, fontSize: 16)),
               Text(
                 NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(totalExpenses),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),

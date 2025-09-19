@@ -22,7 +22,7 @@ class _AddTransactionFormState extends State<AddTransactionForm>
   String? _selectedCategory;
   bool _isLoading = false;
 
-  // Categorias extraídas do seu index.html
+  
   final List<String> _expenseCategories = [
     'Alimentação', 'Transporte', 'Lazer', 'Moradia', 'Saúde', 'Outros'
   ];
@@ -34,7 +34,7 @@ class _AddTransactionFormState extends State<AddTransactionForm>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    // Adiciona um listener para limpar o formulário ao trocar de aba
+    
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
         _formKey.currentState?.reset();
@@ -124,7 +124,7 @@ class _AddTransactionFormState extends State<AddTransactionForm>
               animation: _tabController.animation!,
               builder: (context, child) {
                 return DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   hint: const Text('Categoria'),
                   items: categories.map((String category) {
                     return DropdownMenuItem<String>(
