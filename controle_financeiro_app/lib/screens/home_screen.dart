@@ -4,12 +4,14 @@ import 'package:controle_financeiro_app/main.dart';
 import 'package:controle_financeiro_app/models/financial_transaction.dart';
 import 'package:controle_financeiro_app/services/firestore_service.dart';
 import 'package:controle_financeiro_app/widgets/add_transaction_form.dart';
-// ----- NOVO IMPORT -----
-import 'package:controle_financeiro_app/widgets/budget_section.dart'; 
+import 'package:controle_financeiro_app/widgets/budget_section.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+
+enum PeriodFilter { thisMonth, last7Days, lastMonth, allTime, custom }
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,6 +23,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   final User? _user = FirebaseAuth.instance.currentUser;
+
+  
+  PeriodFilter _selectedFilter = PeriodFilter.thisMonth;
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   @override
   Widget build(BuildContext context) {
@@ -46,12 +53,17 @@ class _HomeScreenState extends State<HomeScreen> {
           if (snapshot.hasError) {
             return Center(child: Text("Erro: ${snapshot.error}"));
           }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          
+          final allTransactions = snapshot.data ?? [];
+          
+          if (allTransactions.isEmpty) {
             return _buildEmptyState();
           }
 
-          final transactions = snapshot.data!;
-          return _buildDashboard(transactions);
+        
+          final filteredTransactions = _getFilteredTransactions(allTransactions);
+
+          return _buildDashboard(allTransactions, filteredTransactions);
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -68,11 +80,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDashboard(List<FinancialTransaction> transactions) {
-    double totalIncome = transactions.where((t) => t.type == 'income').fold(0, (sum, item) => sum + item.amount);
-    double totalExpenses = transactions.where((t) => t.type == 'expense').fold(0, (sum, item) => sum + item.amount);
+  
+  Widget _buildDashboard(List<FinancialTransaction> allTransactions, List<FinancialTransaction> filteredTransactions) {
+    
+    double totalIncome = filteredTransactions.where((t) => t.type == 'income').fold(0, (sum, item) => sum + item.amount);
+    double totalExpenses = filteredTransactions.where((t) => t.type == 'expense').fold(0, (sum, item) => sum + item.amount);
     double balance = totalIncome - totalExpenses;
-    final expenseTransactions = transactions.where((t) => t.type == 'expense').toList();
+    final expenseTransactions = filteredTransactions.where((t) => t.type == 'expense').toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
@@ -88,8 +102,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 16),
         _buildExpenseChart(expenseTransactions, totalExpenses),
-
-        // ----- SEÇÃO DE ORÇAMENTO ADICIONADA AQUI -----
         const SizedBox(height: 24),
         Text(
           'Metas e Orçamentos (Este Mês)',
@@ -98,9 +110,8 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 16),
         Builder(
           builder: (context) {
-            // Filtra as despesas para incluir apenas as do mês e ano correntes
             final now = DateTime.now();
-            final expensesThisMonth = transactions
+            final expensesThisMonth = allTransactions 
                 .where((t) =>
                     t.type == 'expense' &&
                     t.createdAt.month == now.month &&
@@ -110,19 +121,140 @@ class _HomeScreenState extends State<HomeScreen> {
             return BudgetSection(expenses: expensesThisMonth);
           }
         ),
-        // ----- FIM DA SEÇÃO ADICIONADA -----
-
         const SizedBox(height: 24),
-        Text(
-          'Histórico de Transações',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        
+       
+        _buildFilterControls(),
+        
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Histórico de Transações',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            if(_selectedFilter != PeriodFilter.allTime)
+              Text('${filteredTransactions.length} itens', style: const TextStyle(color: AppColors.textoSuave)),
+          ],
         ),
         const SizedBox(height: 8),
-        _buildTransactionList(transactions),
+        _buildTransactionList(filteredTransactions), 
       ],
     );
   }
+
   
+  List<FinancialTransaction> _getFilteredTransactions(List<FinancialTransaction> allTransactions) {
+    final now = DateTime.now();
+    DateTime start;
+    DateTime end;
+
+    switch (_selectedFilter) {
+      case PeriodFilter.thisMonth:
+        start = DateTime(now.year, now.month, 1);
+        end = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+        break;
+      case PeriodFilter.last7Days:
+        start = now.subtract(const Duration(days: 6));
+        start = DateTime(start.year, start.month, start.day);
+        end = DateTime(now.year, now.month, now.day, 23, 59, 59);
+        break;
+      case PeriodFilter.lastMonth:
+        start = DateTime(now.year, now.month - 1, 1);
+        end = DateTime(now.year, now.month, 0, 23, 59, 59);
+        break;
+      case PeriodFilter.custom:
+        start = _startDate != null ? DateTime(_startDate!.year, _startDate!.month, _startDate!.day) : DateTime.fromMillisecondsSinceEpoch(0);
+        end = _endDate != null ? DateTime(_endDate!.year, _endDate!.month, _endDate!.day, 23, 59, 59) : now;
+        break;
+      case PeriodFilter.allTime:
+      default:
+        return allTransactions;
+    }
+
+    return allTransactions.where((t) {
+      return !t.createdAt.isBefore(start) && !t.createdAt.isAfter(end);
+    }).toList();
+  }
+
+  
+  Widget _buildFilterControls() {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: AppColors.borda),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Filtrar Período", style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<PeriodFilter>(
+              value: _selectedFilter,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              items: const [
+                DropdownMenuItem(value: PeriodFilter.thisMonth, child: Text('Este Mês')),
+                DropdownMenuItem(value: PeriodFilter.last7Days, child: Text('Últimos 7 dias')),
+                DropdownMenuItem(value: PeriodFilter.lastMonth, child: Text('Mês Passado')),
+                DropdownMenuItem(value: PeriodFilter.allTime, child: Text('Todo o Período')),
+                DropdownMenuItem(value: PeriodFilter.custom, child: Text('Personalizado')),
+              ],
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() {
+                  _selectedFilter = value;
+                  if (_selectedFilter != PeriodFilter.custom) {
+                    _startDate = null;
+                    _endDate = null;
+                  }
+                });
+              },
+            ),
+            if (_selectedFilter == PeriodFilter.custom)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.calendar_today),
+                        onPressed: () async {
+                          final date = await showDatePicker(
+                            context: context, initialDate: _startDate ?? DateTime.now(),
+                            firstDate: DateTime(2000), lastDate: DateTime.now(),
+                          );
+                          if (date != null) setState(() => _startDate = date);
+                        },
+                        label: Text(_startDate == null ? 'Início' : DateFormat('dd/MM/yy').format(_startDate!)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.calendar_today),
+                        onPressed: () async {
+                           final date = await showDatePicker(
+                            context: context, initialDate: _endDate ?? DateTime.now(),
+                            firstDate: _startDate ?? DateTime(2000), lastDate: DateTime.now(),
+                          );
+                          if (date != null) setState(() => _endDate = date);
+                        },
+                        label: Text(_endDate == null ? 'Fim' : DateFormat('dd/MM/yy').format(_endDate!)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildExpenseChart(List<FinancialTransaction> expenseTransactions, double totalExpenses) {
     if (expenseTransactions.isEmpty) {
       return Container(
@@ -251,6 +383,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTransactionList(List<FinancialTransaction> transactions) {
+    
+    if (transactions.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40.0),
+        child: Center(
+          child: Text(
+            'Nenhuma transação encontrada para este período.',
+            style: TextStyle(color: AppColors.textoSuave),
+          ),
+        ),
+      );
+    }
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(

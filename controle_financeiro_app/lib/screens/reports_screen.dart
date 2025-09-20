@@ -1,4 +1,4 @@
-// lib/screens/reports_screen.dart
+
 
 import 'package:controle_financeiro_app/models/financial_transaction.dart';
 import 'package:controle_financeiro_app/services/firestore_service.dart';
@@ -91,7 +91,7 @@ class ReportsScreen extends StatelessWidget {
     );
   }
   
-  // --- GRÁFICO DE EVOLUÇÃO MENSAL (CORRIGIDO) ---
+  
   Widget _buildMonthlyEvolutionChart(List<FinancialTransaction> transactions) {
     final monthlyTotals = <String, Map<String, double>>{};
     final now = DateTime.now();
@@ -122,7 +122,7 @@ class ReportsScreen extends StatelessWidget {
             ],
           );
         }),
-        // --- ESTRUTURA CORRIGIDA ABAIXO ---
+        
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (value, meta) {
             final monthKey = monthlyTotals.keys.elementAt(value.toInt());
@@ -138,7 +138,7 @@ class ReportsScreen extends StatelessWidget {
     );
   }
   
-  // --- GRÁFICO DE COMPARAÇÃO DE CATEGORIAS (CORRIGIDO) ---
+  
   Widget _buildCategoryComparisonChart(List<FinancialTransaction> transactions) {
     final categoryTotals = <String, double>{};
     transactions.where((t) => t.type == 'expense').forEach((t) {
@@ -158,7 +158,7 @@ class ReportsScreen extends StatelessWidget {
             barRods: [BarChartRodData(toY: entry.value, color: Colors.indigo, width: 15, borderRadius: BorderRadius.zero)],
           );
         }),
-        // --- ESTRUTURA CORRIGIDA ABAIXO ---
+        
         titlesData: FlTitlesData(
           leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (value, meta) {
             if (value.toInt() >= sortedCategories.length) return const Text('');

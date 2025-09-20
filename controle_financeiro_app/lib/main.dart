@@ -1,12 +1,12 @@
-// lib/main.dart
+
 
 import 'package:controle_financeiro_app/screens/auth_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:intl/date_symbol_data_local.dart'; // ✅ IMPORTAÇÃO CORRIGIDA
+import 'package:intl/date_symbol_data_local.dart'; 
 
-// Cores extraídas do seu arquivo styles.css
+
 abstract class AppColors {
   static const Color primaria = Color(0xFF4F46E5);
   static const Color fundo = Color(0xFFF8FAFC);

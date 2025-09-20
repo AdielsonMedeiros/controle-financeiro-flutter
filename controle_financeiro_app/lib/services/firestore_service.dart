@@ -1,15 +1,15 @@
-// lib/services/firestore_service.dart
+
 
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:controle_financeiro_app/models/budget.dart'; // Importa o modelo de Orçamento
+import 'package:controle_financeiro_app/models/budget.dart'; 
 import 'package:controle_financeiro_app/models/financial_transaction.dart';
 import 'package:rxdart/rxdart.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // --- MÉTODOS DE TRANSAÇÕES (JÁ EXISTENTES) ---
+  
 
   Stream<List<FinancialTransaction>> getTransactionsStream(String userId) {
     final expensesStream = _db
@@ -63,7 +63,7 @@ class FirestoreService {
         .add(transactionData);
   }
 
-  // --- NOVOS MÉTODOS DE ORÇAMENTO (ADICIONAR) ---
+  
 
   Stream<Budget> getBudgetsStream(String userId) {
     return _db

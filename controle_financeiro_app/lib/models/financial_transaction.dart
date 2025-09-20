@@ -1,16 +1,16 @@
-// lib/models/financial_transaction.dart
 
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import corrigido
 
-class FinancialTransaction { // Classe Renomeada
+import 'package:cloud_firestore/cloud_firestore.dart'; 
+
+class FinancialTransaction { 
   final String id;
   final String description;
   final String category;
   final double amount;
-  final String type; // 'expense' ou 'income'
+  final String type; 
   final DateTime createdAt;
 
-  FinancialTransaction({ // Construtor Renomeado
+  FinancialTransaction({ 
     required this.id,
     required this.description,
     required this.category,
@@ -19,9 +19,9 @@ class FinancialTransaction { // Classe Renomeada
     required this.createdAt,
   });
 
-  factory FinancialTransaction.fromFirestore(DocumentSnapshot doc, String type) { // Método Renomeado
+  factory FinancialTransaction.fromFirestore(DocumentSnapshot doc, String type) { 
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    return FinancialTransaction( // Objeto Renomeado
+    return FinancialTransaction( 
       id: doc.id,
       type: type,
       description: data['description'] ?? '',

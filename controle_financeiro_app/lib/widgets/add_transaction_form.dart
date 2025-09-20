@@ -1,4 +1,4 @@
-// lib/widgets/add_transaction_form.dart
+
 
 import 'package:controle_financeiro_app/main.dart';
 import 'package:controle_financeiro_app/services/firestore_service.dart';
@@ -72,7 +72,7 @@ class _AddTransactionFormState extends State<AddTransactionForm>
 
       try {
         await firestoreService.addTransaction(user!.uid, transactionData);
-        Navigator.of(context).pop(); // Fecha o modal com sucesso
+        Navigator.of(context).pop(); 
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao salvar: ${e.toString()}')),
@@ -87,7 +87,7 @@ class _AddTransactionFormState extends State<AddTransactionForm>
 
   @override
   Widget build(BuildContext context) {
-    // Determina a lista de categorias e a cor do botão com base na aba selecionada
+    
     final isExpense = _tabController.index == 0;
     final categories = isExpense ? _expenseCategories : _incomeCategories;
     final buttonColor = isExpense ? AppColors.erro : AppColors.sucesso;
@@ -110,7 +110,7 @@ class _AddTransactionFormState extends State<AddTransactionForm>
                 Tab(text: 'Adicionar Gasto'),
                 Tab(text: 'Adicionar Receita'),
               ],
-              onTap: (_) => setState(() {}), // Força a reconstrução para trocar as categorias
+              onTap: (_) => setState(() {}), 
             ),
             const SizedBox(height: 24),
             TextFormField(
@@ -119,7 +119,7 @@ class _AddTransactionFormState extends State<AddTransactionForm>
               validator: (value) => (value?.isEmpty ?? true) ? 'Campo obrigatório' : null,
             ),
             const SizedBox(height: 16),
-            // Usamos um `AnimatedBuilder` para que o Dropdown troque de categorias suavemente
+            
             AnimatedBuilder(
               animation: _tabController.animation!,
               builder: (context, child) {

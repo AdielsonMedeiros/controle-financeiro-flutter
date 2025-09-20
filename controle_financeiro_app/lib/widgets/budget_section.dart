@@ -1,4 +1,4 @@
-// lib/widgets/budget_section.dart
+
 
 import 'package:controle_financeiro_app/main.dart';
 import 'package:controle_financeiro_app/models/budget.dart';
@@ -22,7 +22,7 @@ class _BudgetSectionState extends State<BudgetSection> {
   late Map<String, TextEditingController> _budgetControllers;
   bool _isLoading = false;
 
-  // ----- ALTERAÇÃO 1: Declarar um mapa para os FocusNodes -----
+  
   late Map<String, FocusNode> _focusNodes;
 
   final List<String> _expenseCategories = const ['Alimentação', 'Transporte', 'Lazer', 'Moradia', 'Saúde', 'Outros'];
@@ -30,11 +30,11 @@ class _BudgetSectionState extends State<BudgetSection> {
   @override
   void initState() {
     super.initState();
-    // Inicializa os controllers e os focus nodes para cada categoria
+    
     _budgetControllers = {
       for (var cat in _expenseCategories) cat: TextEditingController(),
     };
-    // ----- ALTERAÇÃO 2: Inicializar os FocusNodes -----
+    
     _focusNodes = {
       for (var cat in _expenseCategories) cat: FocusNode(),
     };
@@ -43,7 +43,7 @@ class _BudgetSectionState extends State<BudgetSection> {
   @override
   void dispose() {
     _budgetControllers.forEach((_, controller) => controller.dispose());
-    // ----- ALTERAÇÃO 3: Fazer o dispose dos FocusNodes para evitar vazamento de memória -----
+    
     _focusNodes.forEach((_, node) => node.dispose());
     super.dispose();
   }
@@ -95,8 +95,8 @@ class _BudgetSectionState extends State<BudgetSection> {
             final formattedValue = value > 0 ? value.toStringAsFixed(2) : '';
             final focusNode = _focusNodes[category]!;
 
-            // ----- ALTERAÇÃO 4: A LÓGICA PRINCIPAL DA CORREÇÃO -----
-            // Só atualiza o texto do controller se o campo NÃO ESTIVER EM FOCO.
+            
+            
             if (!focusNode.hasFocus && controller.text != formattedValue) {
                controller.text = formattedValue;
             }
@@ -129,7 +129,7 @@ class _BudgetSectionState extends State<BudgetSection> {
                 progress,
                 isOverBudget,
                 _budgetControllers[category]!,
-                _focusNodes[category]!, // Passa o FocusNode para o método que constrói o item
+                _focusNodes[category]!, 
               );
             }).toList(),
             const SizedBox(height: 16),
@@ -152,7 +152,7 @@ class _BudgetSectionState extends State<BudgetSection> {
 
   Widget _buildBudgetItem(
     BuildContext context, String category, double spent, double budget, double progress,
-    bool isOverBudget, TextEditingController controller, FocusNode focusNode // Recebe o FocusNode
+    bool isOverBudget, TextEditingController controller, FocusNode focusNode 
   ) {
     return Card(
       elevation: 0,
@@ -192,7 +192,7 @@ class _BudgetSectionState extends State<BudgetSection> {
             ),
             const SizedBox(height: 8),
             TextFormField(
-              // ----- ALTERAÇÃO 5: Associar o FocusNode ao TextFormField -----
+              
               focusNode: focusNode,
               controller: controller,
               decoration: const InputDecoration(

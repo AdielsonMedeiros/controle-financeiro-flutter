@@ -1,4 +1,4 @@
-// lib/screens/auth_gate.dart
+
 
 import 'package:controle_financeiro_app/screens/auth_screen.dart';
 import 'package:controle_financeiro_app/screens/tabs_screen.dart';
@@ -17,12 +17,12 @@ class AuthGate extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // Se tem usuário, mostra a tela principal com abas
+        
         if (snapshot.hasData) {
           return const TabsScreen();
         }
         
-        // Se não tem usuário, mostra a tela de autenticação
+        
         return const AuthScreen();
       },
     );
