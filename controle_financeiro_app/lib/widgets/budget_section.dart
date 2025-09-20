@@ -22,26 +22,33 @@ class _BudgetSectionState extends State<BudgetSection> {
   late Map<String, TextEditingController> _budgetControllers;
   bool _isLoading = false;
 
-  // As categorias de despesa que seu app usa
+  // ----- ALTERAÇÃO 1: Declarar um mapa para os FocusNodes -----
+  late Map<String, FocusNode> _focusNodes;
+
   final List<String> _expenseCategories = const ['Alimentação', 'Transporte', 'Lazer', 'Moradia', 'Saúde', 'Outros'];
 
-  // --- CORREÇÃO DO ERRO 2: Controllers são criados uma única vez aqui ---
   @override
   void initState() {
     super.initState();
+    // Inicializa os controllers e os focus nodes para cada categoria
     _budgetControllers = {
       for (var cat in _expenseCategories) cat: TextEditingController(),
+    };
+    // ----- ALTERAÇÃO 2: Inicializar os FocusNodes -----
+    _focusNodes = {
+      for (var cat in _expenseCategories) cat: FocusNode(),
     };
   }
 
   @override
   void dispose() {
     _budgetControllers.forEach((_, controller) => controller.dispose());
+    // ----- ALTERAÇÃO 3: Fazer o dispose dos FocusNodes para evitar vazamento de memória -----
+    _focusNodes.forEach((_, node) => node.dispose());
     super.dispose();
   }
 
   Future<void> _saveBudgets() async {
-    // Esconde o teclado para não atrapalhar a SnackBar
     FocusScope.of(context).unfocus();
     
     setState(() => _isLoading = true);
@@ -71,26 +78,26 @@ class _BudgetSectionState extends State<BudgetSection> {
     if (_userId == null) return const SizedBox.shrink();
 
     return StreamBuilder<Budget>(
-      stream: _firestoreService.getBudgetsStream(_userId),
+      stream: _firestoreService.getBudgetsStream(_userId!),
       builder: (context, snapshot) {
-        // --- CORREÇÃO DO ERRO 1: Verificação correta do estado da conexão ---
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+        if (snapshot.connectionState == ConnectionState.waiting && _budgetControllers.values.every((c) => c.text.isEmpty)) {
+            return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
           return Center(child: Text("Erro ao carregar orçamentos: ${snapshot.error}"));
         }
-        // Se a stream termina sem dados (documento não existe), cria um orçamento vazio
+        
         final budget = snapshot.data ?? Budget(categories: {});
 
-        // --- CORREÇÃO DO ERRO 3: Sincroniza o texto dos controllers existentes ---
-        // Isso atualiza os campos com os dados do banco sem recriar os controllers
         budget.categories.forEach((category, value) {
           if (_budgetControllers.containsKey(category)) {
             final controller = _budgetControllers[category]!;
-            final formattedValue = value.toStringAsFixed(2);
-            // Só atualiza se o texto for diferente para não atrapalhar a digitação
-            if (controller.text != formattedValue) {
+            final formattedValue = value > 0 ? value.toStringAsFixed(2) : '';
+            final focusNode = _focusNodes[category]!;
+
+            // ----- ALTERAÇÃO 4: A LÓGICA PRINCIPAL DA CORREÇÃO -----
+            // Só atualiza o texto do controller se o campo NÃO ESTIVER EM FOCO.
+            if (!focusNode.hasFocus && controller.text != formattedValue) {
                controller.text = formattedValue;
             }
           }
@@ -122,8 +129,9 @@ class _BudgetSectionState extends State<BudgetSection> {
                 progress,
                 isOverBudget,
                 _budgetControllers[category]!,
+                _focusNodes[category]!, // Passa o FocusNode para o método que constrói o item
               );
-            }),
+            }).toList(),
             const SizedBox(height: 16),
             if (_isLoading)
               const Center(child: CircularProgressIndicator())
@@ -144,7 +152,7 @@ class _BudgetSectionState extends State<BudgetSection> {
 
   Widget _buildBudgetItem(
     BuildContext context, String category, double spent, double budget, double progress,
-    bool isOverBudget, TextEditingController controller,
+    bool isOverBudget, TextEditingController controller, FocusNode focusNode // Recebe o FocusNode
   ) {
     return Card(
       elevation: 0,
@@ -174,7 +182,7 @@ class _BudgetSectionState extends State<BudgetSection> {
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
-                value: progress.isFinite ? progress : 0.0, // Garante que o valor é finito
+                value: progress.clamp(0.0, 1.0),
                 minHeight: 12,
                 backgroundColor: AppColors.borda,
                 valueColor: AlwaysStoppedAnimation<Color>(
@@ -184,6 +192,8 @@ class _BudgetSectionState extends State<BudgetSection> {
             ),
             const SizedBox(height: 8),
             TextFormField(
+              // ----- ALTERAÇÃO 5: Associar o FocusNode ao TextFormField -----
+              focusNode: focusNode,
               controller: controller,
               decoration: const InputDecoration(
                 labelText: 'Definir Orçamento (R\$)',

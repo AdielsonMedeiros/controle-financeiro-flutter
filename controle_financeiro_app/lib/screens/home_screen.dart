@@ -4,6 +4,8 @@ import 'package:controle_financeiro_app/main.dart';
 import 'package:controle_financeiro_app/models/financial_transaction.dart';
 import 'package:controle_financeiro_app/services/firestore_service.dart';
 import 'package:controle_financeiro_app/widgets/add_transaction_form.dart';
+// ----- NOVO IMPORT -----
+import 'package:controle_financeiro_app/widgets/budget_section.dart'; 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: StreamBuilder<List<FinancialTransaction>>(
-        stream: _firestoreService.getTransactionsStream(_user.uid),
+        stream: _firestoreService.getTransactionsStream(_user!.uid),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -85,7 +87,31 @@ class _HomeScreenState extends State<HomeScreen> {
           style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        _buildExpenseChart(expenseTransactions, totalExpenses), // Passando o total de despesas
+        _buildExpenseChart(expenseTransactions, totalExpenses),
+
+        // ----- SEÇÃO DE ORÇAMENTO ADICIONADA AQUI -----
+        const SizedBox(height: 24),
+        Text(
+          'Metas e Orçamentos (Este Mês)',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        Builder(
+          builder: (context) {
+            // Filtra as despesas para incluir apenas as do mês e ano correntes
+            final now = DateTime.now();
+            final expensesThisMonth = transactions
+                .where((t) =>
+                    t.type == 'expense' &&
+                    t.createdAt.month == now.month &&
+                    t.createdAt.year == now.year)
+                .toList();
+
+            return BudgetSection(expenses: expensesThisMonth);
+          }
+        ),
+        // ----- FIM DA SEÇÃO ADICIONADA -----
+
         const SizedBox(height: 24),
         Text(
           'Histórico de Transações',
