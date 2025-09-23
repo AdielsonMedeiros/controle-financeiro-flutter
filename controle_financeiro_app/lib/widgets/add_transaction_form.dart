@@ -7,8 +7,16 @@ import 'package:flutter/material.dart';
 
 class AddTransactionForm extends StatefulWidget {
   final FinancialTransaction? transaction;
+  // PARÂMETROS ADICIONADOS PARA RECEBER AS CATEGORIAS
+  final List<String> allExpenseCategories;
+  final List<String> allIncomeCategories;
 
-  const AddTransactionForm({super.key, this.transaction});
+  const AddTransactionForm({
+    super.key,
+    this.transaction,
+    required this.allExpenseCategories,
+    required this.allIncomeCategories,
+  });
 
   @override
   State<AddTransactionForm> createState() => _AddTransactionFormState();
@@ -25,21 +33,7 @@ class _AddTransactionFormState extends State<AddTransactionForm>
   bool _isLoading = false;
   late bool _isEditMode;
 
-  final List<String> _expenseCategories = [
-    'Alimentação',
-    'Transporte',
-    'Lazer',
-    'Moradia',
-    'Saúde',
-    'Outros'
-  ];
-  final List<String> _incomeCategories = [
-    'Salário',
-    'Investimentos',
-    'Freelance',
-    'Presente',
-    'Outros'
-  ];
+  // REMOVIDO: As listas fixas de categorias foram removidas daqui
 
   @override
   void initState() {
@@ -56,7 +50,12 @@ class _AddTransactionFormState extends State<AddTransactionForm>
       final t = widget.transaction!;
       _descriptionController.text = t.description;
       _amountController.text = t.amount.toString();
-      _selectedCategory = t.category;
+      
+      // Garante que a categoria da transação a ser editada ainda exista na lista
+      final currentCategories = t.type == 'expense' ? widget.allExpenseCategories : widget.allIncomeCategories;
+      if (currentCategories.contains(t.category)) {
+        _selectedCategory = t.category;
+      }
     }
 
     _tabController.addListener(() {
@@ -78,6 +77,14 @@ class _AddTransactionFormState extends State<AddTransactionForm>
   }
 
   Future<void> _submitForm() async {
+    // Valida se uma categoria foi selecionada
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, selecione uma categoria.')),
+      );
+      return;
+    }
+
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
 
@@ -115,7 +122,9 @@ class _AddTransactionFormState extends State<AddTransactionForm>
   @override
   Widget build(BuildContext context) {
     final isExpense = _tabController.index == 0;
-    final categories = isExpense ? _expenseCategories : _incomeCategories;
+    // MODIFICADO: Usa as listas recebidas pelo construtor
+    final categories =
+        isExpense ? widget.allExpenseCategories : widget.allIncomeCategories;
 
     final buttonColor = isExpense
         ? Theme.of(context).colorScheme.error.withOpacity(0.8)
@@ -154,7 +163,10 @@ class _AddTransactionFormState extends State<AddTransactionForm>
                   Tab(text: 'Adicionar Gasto'),
                   Tab(text: 'Adicionar Receita')
                 ],
-                onTap: (_) => setState(() {}),
+                onTap: (_) => setState(() {
+                  // Reseta a categoria selecionada ao trocar de aba
+                  _selectedCategory = null;
+                }),
               ),
             const SizedBox(height: 24),
             TextFormField(
@@ -181,7 +193,6 @@ class _AddTransactionFormState extends State<AddTransactionForm>
             TextFormField(
               controller: _amountController,
               decoration: const InputDecoration(labelText: 'Valor (R\$)'),
-              // CORREÇÃO AQUI: TextInputype -> TextInputType
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               validator: (v) {

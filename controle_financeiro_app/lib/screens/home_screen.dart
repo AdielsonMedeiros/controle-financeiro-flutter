@@ -1,3 +1,6 @@
+// lib/screens/home_screen.dart
+
+import 'package:controle_financeiro_app/models/categories.dart';
 import 'package:controle_financeiro_app/models/financial_transaction.dart';
 import 'package:controle_financeiro_app/providers/theme_provider.dart';
 import 'package:controle_financeiro_app/services/auth_service.dart';
@@ -27,6 +30,13 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
 
+  final List<String> _defaultExpenseCategories = const [
+    'Alimentação', 'Transporte', 'Lazer', 'Moradia', 'Saúde', 'Outros'
+  ];
+  final List<String> _defaultIncomeCategories = const [
+    'Salário', 'Investimentos', 'Freelance', 'Presente', 'Outros'
+  ];
+
   @override
   Widget build(BuildContext context) {
     if (_user == null) {
@@ -36,64 +46,95 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Visão Geral'),
-        actions: [
-          IconButton(
-            icon: Icon(
-              themeProvider.themeMode == ThemeMode.light
-                  ? Icons.dark_mode_outlined
-                  : Icons.light_mode_outlined,
-            ),
-            onPressed: () {
-              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+    return StreamBuilder<Categories>(
+      stream: _firestoreService.getCategoriesStream(_user!.uid),
+      builder: (context, categoriesSnapshot) {
+        final customCategories = categoriesSnapshot.data ??
+            Categories(expenseCategories: [], incomeCategories: []);
+        
+        final allExpenseCategories =
+            [..._defaultExpenseCategories, ...customCategories.expenseCategories]
+                .toSet()
+                .toList();
+        final allIncomeCategories =
+            [..._defaultIncomeCategories, ...customCategories.incomeCategories]
+                .toSet()
+                .toList();
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Visão Geral'),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  themeProvider.themeMode == ThemeMode.light
+                      ? Icons.dark_mode_outlined
+                      : Icons.light_mode_outlined,
+                ),
+                onPressed: () {
+                  Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: () => AuthService().signOut(),
+              ),
+            ],
+          ),
+          body: StreamBuilder<List<FinancialTransaction>>(
+            stream: _firestoreService.getTransactionsStream(_user!.uid),
+            builder: (context, transactionSnapshot) {
+              if (transactionSnapshot.connectionState ==
+                  ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (transactionSnapshot.hasError) {
+                return Center(
+                    child: Text("Erro: ${transactionSnapshot.error}"));
+              }
+              final allTransactions = transactionSnapshot.data ?? [];
+              if (allTransactions.isEmpty) {
+                return _buildEmptyState();
+              }
+              final filteredTransactions =
+                  _getFilteredTransactions(allTransactions);
+              return _buildDashboard(
+                  allTransactions,
+                  filteredTransactions,
+                  allExpenseCategories,
+                  allIncomeCategories);
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => AuthService().signOut(),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _showAddTransactionModal(
+                context, allExpenseCategories, allIncomeCategories),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            child: const Icon(Icons.add, color: Colors.white),
           ),
-        ],
-      ),
-      body: StreamBuilder<List<FinancialTransaction>>(
-        stream: _firestoreService.getTransactionsStream(_user!.uid),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text("Erro: ${snapshot.error}"));
-          }
+        );
+      },
+    );
+  }
 
-          final allTransactions = snapshot.data ?? [];
-
-          if (allTransactions.isEmpty) {
-            return _buildEmptyState();
-          }
-
-          final filteredTransactions =
-              _getFilteredTransactions(allTransactions);
-
-          return _buildDashboard(allTransactions, filteredTransactions);
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (ctx) => const AddTransactionForm(),
-          );
-        },
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        child: const Icon(Icons.add, color: Colors.white),
+  void _showAddTransactionModal(BuildContext context,
+      List<String> expenseCat, List<String> incomeCat,
+      {FinancialTransaction? transaction}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => AddTransactionForm(
+        transaction: transaction,
+        allExpenseCategories: expenseCat,
+        allIncomeCategories: incomeCat,
       ),
     );
   }
 
-  Widget _buildDashboard(List<FinancialTransaction> allTransactions,
-      List<FinancialTransaction> filteredTransactions) {
+  Widget _buildDashboard(
+      List<FinancialTransaction> allTransactions,
+      List<FinancialTransaction> filteredTransactions,
+      List<String> allExpenseCategories,
+      List<String> allIncomeCategories) {
     double totalIncome = filteredTransactions
         .where((t) => t.type == 'income')
         .fold(0, (sum, item) => sum + item.amount);
@@ -139,7 +180,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   t.createdAt.year == now.year)
               .toList();
 
-          return BudgetSection(expenses: expensesThisMonth);
+          return BudgetSection(
+            expenses: expensesThisMonth,
+            allExpenseCategories: allExpenseCategories,
+          );
         }),
         const SizedBox(height: 24),
         _buildFilterControls(),
@@ -160,7 +204,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: 8),
-        _buildTransactionList(filteredTransactions),
+        _buildTransactionList(
+            filteredTransactions, allExpenseCategories, allIncomeCategories),
       ],
     );
   }
@@ -227,7 +272,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 DropdownMenuItem(
                     value: PeriodFilter.lastMonth, child: Text('Mês Passado')),
                 DropdownMenuItem(
-                    value: PeriodFilter.allTime, child: Text('Todo o Período')),
+                    value: PeriodFilter.allTime,
+                    child: Text('Todo o Período')),
                 DropdownMenuItem(
                     value: PeriodFilter.custom, child: Text('Personalizado')),
               ],
@@ -455,7 +501,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildTransactionList(List<FinancialTransaction> transactions) {
+  Widget _buildTransactionList(
+      List<FinancialTransaction> transactions,
+      List<String> allExpenseCategories,
+      List<String> allIncomeCategories) {
     if (transactions.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 40.0),
@@ -498,17 +547,15 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Icon(Icons.delete, color: Colors.white),
             ),
             child: ListTile(
-              // NOVO: Ícone de edição para abrir o formulário
               leading: IconButton(
                 icon: Icon(Icons.edit_note,
                     color: Theme.of(context).colorScheme.onSurfaceVariant),
                 onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    // Passamos a transação específica para o formulário
-                    builder: (ctx) =>
-                        AddTransactionForm(transaction: transaction),
+                  _showAddTransactionModal(
+                    context,
+                    allExpenseCategories,
+                    allIncomeCategories,
+                    transaction: transaction,
                   );
                 },
               ),

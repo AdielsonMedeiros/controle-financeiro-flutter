@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:controle_financeiro_app/models/budget.dart';
+import 'package:controle_financeiro_app/models/categories.dart';
 import 'package:controle_financeiro_app/models/financial_transaction.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -10,7 +11,6 @@ class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   Stream<List<FinancialTransaction>> getTransactionsStream(String userId) {
-    // ... (código existente inalterado) ...
     final expensesStream = _db
         .collection('users')
         .doc(userId)
@@ -39,7 +39,6 @@ class FirestoreService {
 
   Future<void> addTransaction(
       String userId, Map<String, dynamic> transactionData) async {
-    // ... (código existente inalterado) ...
     final collectionName =
         transactionData['type'] == 'expense' ? 'gastos' : 'receitas';
 
@@ -52,17 +51,13 @@ class FirestoreService {
         .add(transactionData);
   }
 
-  // --- NOVO MÉTODO PARA ATUALIZAR TRANSAÇÕES ---
   Future<void> updateTransaction(
       String userId, Map<String, dynamic> transactionData) async {
-    // O tipo e o ID devem estar presentes nos dados da transação
     final collectionName =
         transactionData['type'] == 'expense' ? 'gastos' : 'receitas';
     final transactionId = transactionData['id'];
 
-    // Removemos o id e o tipo do mapa para não salvá-los dentro do documento
     transactionData.remove('id');
-    // O tipo já está implícito pelo nome da coleção
 
     await _db
         .collection('users')
@@ -74,7 +69,6 @@ class FirestoreService {
 
   Future<void> deleteTransaction(
       String userId, FinancialTransaction transaction) async {
-    // ... (código existente inalterado) ...
     final collectionName =
         transaction.type == 'expense' ? 'gastos' : 'receitas';
     await _db
@@ -86,7 +80,6 @@ class FirestoreService {
   }
 
   Stream<Budget> getBudgetsStream(String userId) {
-    // ... (código existente inalterado) ...
     return _db
         .collection('users')
         .doc(userId)
@@ -98,12 +91,42 @@ class FirestoreService {
   }
 
   Future<void> saveBudgets(String userId, Map<String, double> budgets) async {
-    // ... (código existente inalterado) ...
     await _db
         .collection('users')
         .doc(userId)
         .collection('orcamentos')
         .doc('mensal')
         .set(budgets, SetOptions(merge: true));
+  }
+  
+  // --- NOVOS MÉTODOS PARA CATEGORIAS ---
+
+  /// Stream para ouvir as categorias em tempo real
+  Stream<Categories> getCategoriesStream(String userId) {
+    final docRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('config')
+        .doc('categories');
+
+    return docRef.snapshots().map((snapshot) {
+      if (snapshot.exists) {
+        return Categories.fromFirestore(snapshot);
+      } else {
+        // Retorna um objeto vazio se o documento não existir
+        return Categories(expenseCategories: [], incomeCategories: []);
+      }
+    });
+  }
+
+  /// Método para salvar (adicionar/remover) categorias
+  Future<void> saveCategories(String userId, Categories categories) async {
+    final docRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('config')
+        .doc('categories');
+
+    await docRef.set(categories.toFirestore(), SetOptions(merge: true));
   }
 }

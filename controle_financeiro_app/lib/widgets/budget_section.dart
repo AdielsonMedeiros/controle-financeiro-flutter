@@ -1,15 +1,22 @@
-
+// lib/widgets/budget_section.dart
 
 import 'package:controle_financeiro_app/models/budget.dart';
 import 'package:controle_financeiro_app/models/financial_transaction.dart';
 import 'package:controle_financeiro_app/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class BudgetSection extends StatefulWidget {
   final List<FinancialTransaction> expenses;
+  // MODIFICADO: Recebe a lista completa de categorias
+  final List<String> allExpenseCategories;
 
-  const BudgetSection({super.key, required this.expenses});
+  const BudgetSection({
+    super.key,
+    required this.expenses,
+    required this.allExpenseCategories,
+  });
 
   @override
   State<BudgetSection> createState() => _BudgetSectionState();
@@ -20,59 +27,74 @@ class _BudgetSectionState extends State<BudgetSection> {
   final String? _userId = FirebaseAuth.instance.currentUser?.uid;
   late Map<String, TextEditingController> _budgetControllers;
   bool _isLoading = false;
-
   late Map<String, FocusNode> _focusNodes;
 
-  final List<String> _expenseCategories = const [
-    'Alimentação',
-    'Transporte',
-    'Lazer',
-    'Moradia',
-    'Saúde',
-    'Outros'
-  ];
+  // REMOVIDO: A lista fixa de categorias foi removida daqui
 
   @override
   void initState() {
     super.initState();
+    _initializeControllers();
+  }
 
+  @override
+  void didUpdateWidget(covariant BudgetSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Garante que os controllers sejam atualizados se a lista de categorias mudar
+    if (!listEquals(oldWidget.allExpenseCategories, widget.allExpenseCategories)) {
+      _disposeControllers();
+      _initializeControllers();
+    }
+  }
+
+  void _initializeControllers() {
     _budgetControllers = {
-      for (var cat in _expenseCategories) cat: TextEditingController(),
+      for (var cat in widget.allExpenseCategories) cat: TextEditingController(),
     };
-
     _focusNodes = {
-      for (var cat in _expenseCategories) cat: FocusNode(),
+      for (var cat in widget.allExpenseCategories) cat: FocusNode(),
     };
+  }
+
+  void _disposeControllers() {
+    _budgetControllers.forEach((_, controller) => controller.dispose());
+    _focusNodes.forEach((_, node) => node.dispose());
   }
 
   @override
   void dispose() {
-    _budgetControllers.forEach((_, controller) => controller.dispose());
-
-    _focusNodes.forEach((_, node) => node.dispose());
+    _disposeControllers();
     super.dispose();
   }
 
   Future<void> _saveBudgets() async {
     FocusScope.of(context).unfocus();
-
     setState(() => _isLoading = true);
+
     final newBudgets = <String, double>{};
-    _budgetControllers.forEach((category, controller) {
-      newBudgets[category] = double.tryParse(controller.text) ?? 0.0;
-    });
+    // MODIFICADO: Itera sobre a lista de categorias do widget
+    for (var category in widget.allExpenseCategories) {
+      final controller = _budgetControllers[category];
+      if (controller != null) {
+        newBudgets[category] = double.tryParse(controller.text) ?? 0.0;
+      }
+    }
 
     try {
       await _firestoreService.saveBudgets(_userId!, newBudgets);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: const Text('Orçamentos salvos com sucesso!'),
-            backgroundColor: Theme.of(context).colorScheme.secondary),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: const Text('Orçamentos salvos com sucesso!'),
+              backgroundColor: Theme.of(context).colorScheme.secondary),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao salvar orçamentos: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao salvar orçamentos: $e')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -93,8 +115,7 @@ class _BudgetSectionState extends State<BudgetSection> {
         }
         if (snapshot.hasError) {
           return Center(
-              child:
-                  Text("Erro ao carregar orçamentos: ${snapshot.error}"));
+              child: Text("Erro ao carregar orçamentos: ${snapshot.error}"));
         }
 
         final budget = snapshot.data ?? Budget(categories: {});
@@ -123,7 +144,8 @@ class _BudgetSectionState extends State<BudgetSection> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ..._expenseCategories.map((category) {
+            // MODIFICADO: Itera sobre a lista de categorias do widget
+            ...widget.allExpenseCategories.map((category) {
               final budgetAmount = budget.categories[category] ?? 0.0;
               final spentAmount = spentByCategory[category] ?? 0.0;
               final progress =
