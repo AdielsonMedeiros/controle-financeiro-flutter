@@ -1,6 +1,5 @@
 
 
-import 'package:controle_financeiro_app/main.dart';
 import 'package:controle_financeiro_app/screens/home_screen.dart';
 import 'package:controle_financeiro_app/screens/reports_screen.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +17,8 @@ class _TabsScreenState extends State<TabsScreen> {
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
     ReportsScreen(),
+    
+    
   ];
 
   void _onItemTapped(int index) {
@@ -44,7 +45,9 @@ class _TabsScreenState extends State<TabsScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: AppColors.primaria,
+        
+        
+        selectedItemColor: Theme.of(context).colorScheme.primary,
         onTap: _onItemTapped,
       ),
     );

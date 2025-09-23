@@ -1,6 +1,5 @@
 
 
-import 'package:controle_financeiro_app/main.dart';
 import 'package:controle_financeiro_app/models/budget.dart';
 import 'package:controle_financeiro_app/models/financial_transaction.dart';
 import 'package:controle_financeiro_app/services/firestore_service.dart';
@@ -22,19 +21,25 @@ class _BudgetSectionState extends State<BudgetSection> {
   late Map<String, TextEditingController> _budgetControllers;
   bool _isLoading = false;
 
-  
   late Map<String, FocusNode> _focusNodes;
 
-  final List<String> _expenseCategories = const ['Alimentação', 'Transporte', 'Lazer', 'Moradia', 'Saúde', 'Outros'];
+  final List<String> _expenseCategories = const [
+    'Alimentação',
+    'Transporte',
+    'Lazer',
+    'Moradia',
+    'Saúde',
+    'Outros'
+  ];
 
   @override
   void initState() {
     super.initState();
-    
+
     _budgetControllers = {
       for (var cat in _expenseCategories) cat: TextEditingController(),
     };
-    
+
     _focusNodes = {
       for (var cat in _expenseCategories) cat: FocusNode(),
     };
@@ -43,14 +48,14 @@ class _BudgetSectionState extends State<BudgetSection> {
   @override
   void dispose() {
     _budgetControllers.forEach((_, controller) => controller.dispose());
-    
+
     _focusNodes.forEach((_, node) => node.dispose());
     super.dispose();
   }
 
   Future<void> _saveBudgets() async {
     FocusScope.of(context).unfocus();
-    
+
     setState(() => _isLoading = true);
     final newBudgets = <String, double>{};
     _budgetControllers.forEach((category, controller) {
@@ -60,7 +65,9 @@ class _BudgetSectionState extends State<BudgetSection> {
     try {
       await _firestoreService.saveBudgets(_userId!, newBudgets);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Orçamentos salvos com sucesso!'), backgroundColor: AppColors.sucesso),
+        SnackBar(
+            content: const Text('Orçamentos salvos com sucesso!'),
+            backgroundColor: Theme.of(context).colorScheme.secondary),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -80,13 +87,16 @@ class _BudgetSectionState extends State<BudgetSection> {
     return StreamBuilder<Budget>(
       stream: _firestoreService.getBudgetsStream(_userId!),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && _budgetControllers.values.every((c) => c.text.isEmpty)) {
-            return const Center(child: CircularProgressIndicator());
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            _budgetControllers.values.every((c) => c.text.isEmpty)) {
+          return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text("Erro ao carregar orçamentos: ${snapshot.error}"));
+          return Center(
+              child:
+                  Text("Erro ao carregar orçamentos: ${snapshot.error}"));
         }
-        
+
         final budget = snapshot.data ?? Budget(categories: {});
 
         budget.categories.forEach((category, value) {
@@ -95,10 +105,8 @@ class _BudgetSectionState extends State<BudgetSection> {
             final formattedValue = value > 0 ? value.toStringAsFixed(2) : '';
             final focusNode = _focusNodes[category]!;
 
-            
-            
             if (!focusNode.hasFocus && controller.text != formattedValue) {
-               controller.text = formattedValue;
+              controller.text = formattedValue;
             }
           }
         });
@@ -118,7 +126,8 @@ class _BudgetSectionState extends State<BudgetSection> {
             ..._expenseCategories.map((category) {
               final budgetAmount = budget.categories[category] ?? 0.0;
               final spentAmount = spentByCategory[category] ?? 0.0;
-              final progress = (budgetAmount > 0) ? (spentAmount / budgetAmount) : 0.0;
+              final progress =
+                  (budgetAmount > 0) ? (spentAmount / budgetAmount) : 0.0;
               final isOverBudget = progress > 1.0;
 
               return _buildBudgetItem(
@@ -129,9 +138,9 @@ class _BudgetSectionState extends State<BudgetSection> {
                 progress,
                 isOverBudget,
                 _budgetControllers[category]!,
-                _focusNodes[category]!, 
+                _focusNodes[category]!,
               );
-            }).toList(),
+            }),
             const SizedBox(height: 16),
             if (_isLoading)
               const Center(child: CircularProgressIndicator())
@@ -140,8 +149,10 @@ class _BudgetSectionState extends State<BudgetSection> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _saveBudgets,
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.sucesso),
-                  child: const Text('Salvar Orçamentos', style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.secondary),
+                  child: const Text('Salvar Orçamentos',
+                      style: TextStyle(color: Colors.white)),
                 ),
               ),
           ],
@@ -151,16 +162,16 @@ class _BudgetSectionState extends State<BudgetSection> {
   }
 
   Widget _buildBudgetItem(
-    BuildContext context, String category, double spent, double budget, double progress,
-    bool isOverBudget, TextEditingController controller, FocusNode focusNode 
-  ) {
+      BuildContext context,
+      String category,
+      double spent,
+      double budget,
+      double progress,
+      bool isOverBudget,
+      TextEditingController controller,
+      FocusNode focusNode) {
     return Card(
-      elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.borda),
-      ),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -168,12 +179,16 @@ class _BudgetSectionState extends State<BudgetSection> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(category, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(category,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
                 Text(
                   'R\$ ${spent.toStringAsFixed(2)} / R\$ ${budget.toStringAsFixed(2)}',
                   style: TextStyle(
-                    color: isOverBudget ? AppColors.erro : AppColors.textoSuave,
-                    fontWeight: isOverBudget ? FontWeight.bold : FontWeight.normal,
+                    color: isOverBudget
+                        ? Theme.of(context).colorScheme.error
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight:
+                        isOverBudget ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
               ],
@@ -184,15 +199,16 @@ class _BudgetSectionState extends State<BudgetSection> {
               child: LinearProgressIndicator(
                 value: progress.clamp(0.0, 1.0),
                 minHeight: 12,
-                backgroundColor: AppColors.borda,
+                backgroundColor: Theme.of(context).colorScheme.outline,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  isOverBudget ? AppColors.erro : AppColors.primaria,
+                  isOverBudget
+                      ? Theme.of(context).colorScheme.error
+                      : Theme.of(context).colorScheme.primary,
                 ),
               ),
             ),
             const SizedBox(height: 8),
             TextFormField(
-              
               focusNode: focusNode,
               controller: controller,
               decoration: const InputDecoration(
@@ -200,7 +216,8 @@ class _BudgetSectionState extends State<BudgetSection> {
                 isDense: true,
                 border: OutlineInputBorder(),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
             ),
           ],
         ),

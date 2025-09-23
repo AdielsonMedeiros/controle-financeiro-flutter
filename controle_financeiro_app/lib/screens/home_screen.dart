@@ -1,7 +1,8 @@
-// lib/screens/home_screen.dart
 
-import 'package:controle_financeiro_app/main.dart';
+
 import 'package:controle_financeiro_app/models/financial_transaction.dart';
+import 'package:controle_financeiro_app/providers/theme_provider.dart';
+import 'package:controle_financeiro_app/services/auth_service.dart';
 import 'package:controle_financeiro_app/services/firestore_service.dart';
 import 'package:controle_financeiro_app/widgets/add_transaction_form.dart';
 import 'package:controle_financeiro_app/widgets/budget_section.dart';
@@ -9,7 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import 'package:provider/provider.dart';
 
 enum PeriodFilter { thisMonth, last7Days, lastMonth, allTime, custom }
 
@@ -24,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   final User? _user = FirebaseAuth.instance.currentUser;
 
-  
   PeriodFilter _selectedFilter = PeriodFilter.thisMonth;
   DateTime? _startDate;
   DateTime? _endDate;
@@ -32,15 +32,29 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     if (_user == null) {
-      return const Scaffold(body: Center(child: Text("Usuário não encontrado.")));
+      return const Scaffold(
+          body: Center(child: Text("Usuário não encontrado.")));
     }
+
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Visão Geral'),
         actions: [
           IconButton(
+            icon: Icon(
+              themeProvider.themeMode == ThemeMode.light
+                  ? Icons.dark_mode_outlined
+                  : Icons.light_mode_outlined,
+            ),
+            onPressed: () {
+              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => FirebaseAuth.instance.signOut(),
+            onPressed: () => AuthService().signOut(),
           ),
         ],
       ),
@@ -53,15 +67,15 @@ class _HomeScreenState extends State<HomeScreen> {
           if (snapshot.hasError) {
             return Center(child: Text("Erro: ${snapshot.error}"));
           }
-          
+
           final allTransactions = snapshot.data ?? [];
-          
+
           if (allTransactions.isEmpty) {
             return _buildEmptyState();
           }
 
-        
-          final filteredTransactions = _getFilteredTransactions(allTransactions);
+          final filteredTransactions =
+              _getFilteredTransactions(allTransactions);
 
           return _buildDashboard(allTransactions, filteredTransactions);
         },
@@ -74,19 +88,23 @@ class _HomeScreenState extends State<HomeScreen> {
             builder: (ctx) => const AddTransactionForm(),
           );
         },
-        backgroundColor: AppColors.primaria,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  
-  Widget _buildDashboard(List<FinancialTransaction> allTransactions, List<FinancialTransaction> filteredTransactions) {
-    
-    double totalIncome = filteredTransactions.where((t) => t.type == 'income').fold(0, (sum, item) => sum + item.amount);
-    double totalExpenses = filteredTransactions.where((t) => t.type == 'expense').fold(0, (sum, item) => sum + item.amount);
+  Widget _buildDashboard(List<FinancialTransaction> allTransactions,
+      List<FinancialTransaction> filteredTransactions) {
+    double totalIncome = filteredTransactions
+        .where((t) => t.type == 'income')
+        .fold(0, (sum, item) => sum + item.amount);
+    double totalExpenses = filteredTransactions
+        .where((t) => t.type == 'expense')
+        .fold(0, (sum, item) => sum + item.amount);
     double balance = totalIncome - totalExpenses;
-    final expenseTransactions = filteredTransactions.where((t) => t.type == 'expense').toList();
+    final expenseTransactions =
+        filteredTransactions.where((t) => t.type == 'expense').toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
@@ -98,53 +116,59 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 24),
         Text(
           'Análise de Despesas',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         _buildExpenseChart(expenseTransactions, totalExpenses),
         const SizedBox(height: 24),
         Text(
           'Metas e Orçamentos (Este Mês)',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        Builder(
-          builder: (context) {
-            final now = DateTime.now();
-            final expensesThisMonth = allTransactions 
-                .where((t) =>
-                    t.type == 'expense' &&
-                    t.createdAt.month == now.month &&
-                    t.createdAt.year == now.year)
-                .toList();
+        Builder(builder: (context) {
+          final now = DateTime.now();
+          final expensesThisMonth = allTransactions
+              .where((t) =>
+                  t.type == 'expense' &&
+                  t.createdAt.month == now.month &&
+                  t.createdAt.year == now.year)
+              .toList();
 
-            return BudgetSection(expenses: expensesThisMonth);
-          }
-        ),
+          return BudgetSection(expenses: expensesThisMonth);
+        }),
         const SizedBox(height: 24),
-        
-       
         _buildFilterControls(),
-        
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               'Histórico de Transações',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
-            if(_selectedFilter != PeriodFilter.allTime)
-              Text('${filteredTransactions.length} itens', style: const TextStyle(color: AppColors.textoSuave)),
+            if (_selectedFilter != PeriodFilter.allTime)
+              Text('${filteredTransactions.length} itens',
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ],
         ),
         const SizedBox(height: 8),
-        _buildTransactionList(filteredTransactions), 
+        _buildTransactionList(filteredTransactions),
       ],
     );
   }
 
-  
-  List<FinancialTransaction> _getFilteredTransactions(List<FinancialTransaction> allTransactions) {
+  List<FinancialTransaction> _getFilteredTransactions(
+      List<FinancialTransaction> allTransactions) {
     final now = DateTime.now();
     DateTime start;
     DateTime end;
@@ -164,8 +188,13 @@ class _HomeScreenState extends State<HomeScreen> {
         end = DateTime(now.year, now.month, 0, 23, 59, 59);
         break;
       case PeriodFilter.custom:
-        start = _startDate != null ? DateTime(_startDate!.year, _startDate!.month, _startDate!.day) : DateTime.fromMillisecondsSinceEpoch(0);
-        end = _endDate != null ? DateTime(_endDate!.year, _endDate!.month, _endDate!.day, 23, 59, 59) : now;
+        start = _startDate != null
+            ? DateTime(_startDate!.year, _startDate!.month, _startDate!.day)
+            : DateTime.fromMillisecondsSinceEpoch(0);
+        end = _endDate != null
+            ? DateTime(
+                _endDate!.year, _endDate!.month, _endDate!.day, 23, 59, 59)
+            : now;
         break;
       case PeriodFilter.allTime:
       default:
@@ -177,31 +206,33 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
   }
 
-  
   Widget _buildFilterControls() {
     return Card(
-      elevation: 0,
+     
       margin: const EdgeInsets.only(bottom: 24),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.borda),
-      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Filtrar Período", style: Theme.of(context).textTheme.titleMedium),
+            Text("Filtrar Período",
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 12),
             DropdownButtonFormField<PeriodFilter>(
-              value: _selectedFilter,
+              initialValue: _selectedFilter,
               decoration: const InputDecoration(border: OutlineInputBorder()),
               items: const [
-                DropdownMenuItem(value: PeriodFilter.thisMonth, child: Text('Este Mês')),
-                DropdownMenuItem(value: PeriodFilter.last7Days, child: Text('Últimos 7 dias')),
-                DropdownMenuItem(value: PeriodFilter.lastMonth, child: Text('Mês Passado')),
-                DropdownMenuItem(value: PeriodFilter.allTime, child: Text('Todo o Período')),
-                DropdownMenuItem(value: PeriodFilter.custom, child: Text('Personalizado')),
+                DropdownMenuItem(
+                    value: PeriodFilter.thisMonth, child: Text('Este Mês')),
+                DropdownMenuItem(
+                    value: PeriodFilter.last7Days,
+                    child: Text('Últimos 7 dias')),
+                DropdownMenuItem(
+                    value: PeriodFilter.lastMonth, child: Text('Mês Passado')),
+                DropdownMenuItem(
+                    value: PeriodFilter.allTime, child: Text('Todo o Período')),
+                DropdownMenuItem(
+                    value: PeriodFilter.custom, child: Text('Personalizado')),
               ],
               onChanged: (value) {
                 if (value == null) return;
@@ -224,12 +255,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         icon: const Icon(Icons.calendar_today),
                         onPressed: () async {
                           final date = await showDatePicker(
-                            context: context, initialDate: _startDate ?? DateTime.now(),
-                            firstDate: DateTime(2000), lastDate: DateTime.now(),
+                            context: context,
+                            initialDate: _startDate ?? DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime.now(),
                           );
                           if (date != null) setState(() => _startDate = date);
                         },
-                        label: Text(_startDate == null ? 'Início' : DateFormat('dd/MM/yy').format(_startDate!)),
+                        label: Text(_startDate == null
+                            ? 'Início'
+                            : DateFormat('dd/MM/yy').format(_startDate!)),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -237,13 +272,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.calendar_today),
                         onPressed: () async {
-                           final date = await showDatePicker(
-                            context: context, initialDate: _endDate ?? DateTime.now(),
-                            firstDate: _startDate ?? DateTime(2000), lastDate: DateTime.now(),
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: _endDate ?? DateTime.now(),
+                            firstDate: _startDate ?? DateTime(2000),
+                            lastDate: DateTime.now(),
                           );
                           if (date != null) setState(() => _endDate = date);
                         },
-                        label: Text(_endDate == null ? 'Fim' : DateFormat('dd/MM/yy').format(_endDate!)),
+                        label: Text(_endDate == null
+                            ? 'Fim'
+                            : DateFormat('dd/MM/yy').format(_endDate!)),
                       ),
                     ),
                   ],
@@ -255,22 +294,31 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildExpenseChart(List<FinancialTransaction> expenseTransactions, double totalExpenses) {
+  Widget _buildExpenseChart(
+      List<FinancialTransaction> expenseTransactions, double totalExpenses) {
     if (expenseTransactions.isEmpty) {
       return Container(
         height: 250,
         alignment: Alignment.center,
-        child: const Text('Nenhuma despesa para analisar.', style: TextStyle(color: AppColors.textoSuave)),
+        child: Text('Nenhuma despesa para analisar.',
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant)),
       );
     }
     final Map<String, double> categoryTotals = {};
     for (var transaction in expenseTransactions) {
-      categoryTotals.update(transaction.category, (value) => value + transaction.amount, ifAbsent: () => transaction.amount);
+      categoryTotals.update(
+          transaction.category, (value) => value + transaction.amount,
+          ifAbsent: () => transaction.amount);
     }
-    
+
     final List<Color> chartColors = [
-      AppColors.erro.withOpacity(0.9), AppColors.primaria.withOpacity(0.8), Colors.amber.shade400,
-      Colors.cyan.shade400, Colors.purple.shade400, Colors.orange.shade400
+      Theme.of(context).colorScheme.error.withOpacity(0.9),
+      Theme.of(context).colorScheme.primary.withOpacity(0.8),
+      Colors.amber.shade400,
+      Colors.cyan.shade400,
+      Colors.purple.shade400,
+      Colors.orange.shade400
     ];
 
     return SizedBox(
@@ -302,10 +350,17 @@ class _HomeScreenState extends State<HomeScreen> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("Total Gasto", style: TextStyle(color: AppColors.textoSuave, fontSize: 16)),
+              Text("Total Gasto",
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 16)),
               Text(
-                NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(totalExpenses),
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$')
+                    .format(totalExpenses),
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           )
@@ -313,14 +368,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   Widget _buildUserInfoHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.container,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borda),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
       ),
       child: Row(
         children: [
@@ -336,10 +391,14 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Bem-vindo de volta!', style: TextStyle(color: AppColors.textoSuave)),
+                Text('Bem-vindo de volta!',
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant)),
                 Text(
                   _user?.email ?? 'Usuário',
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.texto),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface),
                 ),
               ],
             ),
@@ -348,17 +407,23 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   Widget _buildEmptyState() {
-     return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long, size: 60, color: AppColors.textoSuave),
-          SizedBox(height: 16),
-          Text("Nenhuma transação encontrada.", style: TextStyle(fontSize: 18, color: AppColors.textoSuave)),
-          SizedBox(height: 8),
-          Text("Clique no botão '+' para adicionar.", style: TextStyle(color: AppColors.textoSuave)),
+          Icon(Icons.receipt_long,
+              size: 60, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          const SizedBox(height: 16),
+          Text("Nenhuma transação encontrada.",
+              style: TextStyle(
+                  fontSize: 18,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 8),
+          Text("Clique no botão '+' para adicionar.",
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
         ],
       ),
     );
@@ -375,33 +440,39 @@ class _HomeScreenState extends State<HomeScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
-        _SummaryCard(title: 'Receitas', amount: income, color: AppColors.sucesso),
-        _SummaryCard(title: 'Despesas', amount: expenses, color: AppColors.erro),
-        _SummaryCard(title: 'Saldo', amount: balance, color: balance >= 0 ? AppColors.sucesso : AppColors.erro),
+        _SummaryCard(
+            title: 'Receitas',
+            amount: income,
+            color: Theme.of(context).colorScheme.secondary),
+        _SummaryCard(
+            title: 'Despesas',
+            amount: expenses,
+            color: Theme.of(context).colorScheme.error),
+        _SummaryCard(
+            title: 'Saldo',
+            amount: balance,
+            color: balance >= 0
+                ? Theme.of(context).colorScheme.secondary
+                : Theme.of(context).colorScheme.error),
       ],
     );
   }
 
   Widget _buildTransactionList(List<FinancialTransaction> transactions) {
-    
     if (transactions.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 40.0),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40.0),
         child: Center(
           child: Text(
             'Nenhuma transação encontrada para este período.',
-            style: TextStyle(color: AppColors.textoSuave),
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
         ),
       );
     }
 
     return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.borda),
-      ),
       clipBehavior: Clip.antiAlias,
       child: ListView.separated(
         shrinkWrap: true,
@@ -410,7 +481,8 @@ class _HomeScreenState extends State<HomeScreen> {
         itemBuilder: (context, index) {
           final transaction = transactions[index];
           final isIncome = transaction.type == 'income';
-          final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+          final formatter =
+              NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
           return Dismissible(
             key: Key(transaction.id),
@@ -418,11 +490,12 @@ class _HomeScreenState extends State<HomeScreen> {
             onDismissed: (direction) {
               _firestoreService.deleteTransaction(_user!.uid, transaction);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${transaction.description} removido(a).')),
+                SnackBar(
+                    content: Text('${transaction.description} removido(a).')),
               );
             },
             background: Container(
-              color: AppColors.erro,
+              color: Theme.of(context).colorScheme.error,
               alignment: Alignment.centerRight,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: const Icon(Icons.delete, color: Colors.white),
@@ -433,7 +506,9 @@ class _HomeScreenState extends State<HomeScreen> {
               trailing: Text(
                 '${isIncome ? '+' : '-'} ${formatter.format(transaction.amount)}',
                 style: TextStyle(
-                  color: isIncome ? AppColors.sucesso : AppColors.erro,
+                  color: isIncome
+                      ? Theme.of(context).colorScheme.secondary
+                      : Theme.of(context).colorScheme.error,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -463,20 +538,24 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: AppColors.container,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borda),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(title, style: const TextStyle(fontSize: 14, color: AppColors.textoSuave)),
+          Text(title,
+              style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const SizedBox(height: 4),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
               formatter.format(amount),
-              style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(
+                  color: color, fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
         ],
