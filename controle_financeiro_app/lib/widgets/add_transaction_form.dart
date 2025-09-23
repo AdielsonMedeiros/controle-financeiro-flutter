@@ -1,11 +1,14 @@
+// lib/widgets/add_transaction_form.dart
 
-
+import 'package:controle_financeiro_app/models/financial_transaction.dart';
 import 'package:controle_financeiro_app/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AddTransactionForm extends StatefulWidget {
-  const AddTransactionForm({super.key});
+  final FinancialTransaction? transaction;
+
+  const AddTransactionForm({super.key, this.transaction});
 
   @override
   State<AddTransactionForm> createState() => _AddTransactionFormState();
@@ -20,36 +23,39 @@ class _AddTransactionFormState extends State<AddTransactionForm>
   final _amountController = TextEditingController();
   String? _selectedCategory;
   bool _isLoading = false;
+  late bool _isEditMode;
 
   final List<String> _expenseCategories = [
-    'Alimentação',
-    'Transporte',
-    'Lazer',
-    'Moradia',
-    'Saúde',
-    'Outros'
+    'Alimentação', 'Transporte', 'Lazer', 'Moradia', 'Saúde', 'Outros'
   ];
   final List<String> _incomeCategories = [
-    'Salário',
-    'Investimentos',
-    'Freelance',
-    'Presente',
-    'Outros'
+    'Salário', 'Investimentos', 'Freelance', 'Presente', 'Outros'
   ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _isEditMode = widget.transaction != null;
+
+    _tabController = TabController(
+      initialIndex: _isEditMode && widget.transaction!.type == 'income' ? 1 : 0,
+      length: 2,
+      vsync: this,
+    );
+
+    if (_isEditMode) {
+      final t = widget.transaction!;
+      _descriptionController.text = t.description;
+      _amountController.text = t.amount.toString();
+      _selectedCategory = t.category;
+    }
 
     _tabController.addListener(() {
-      if (_tabController.indexIsChanging) {
+      if (_tabController.indexIsChanging && !_isEditMode) {
         _formKey.currentState?.reset();
         _descriptionController.clear();
         _amountController.clear();
-        setState(() {
-          _selectedCategory = null;
-        });
+        setState(() => _selectedCategory = null);
       }
     });
   }
@@ -71,6 +77,7 @@ class _AddTransactionFormState extends State<AddTransactionForm>
       final isExpense = _tabController.index == 0;
 
       final transactionData = {
+        'id': _isEditMode ? widget.transaction!.id : null,
         'description': _descriptionController.text,
         'amount': double.tryParse(_amountController.text) ?? 0.0,
         'category': _selectedCategory,
@@ -78,7 +85,11 @@ class _AddTransactionFormState extends State<AddTransactionForm>
       };
 
       try {
-        await firestoreService.addTransaction(user!.uid, transactionData);
+        if (_isEditMode) {
+          await firestoreService.updateTransaction(user!.uid, transactionData);
+        } else {
+          await firestoreService.addTransaction(user!.uid, transactionData);
+        }
         if (mounted) Navigator.of(context).pop();
       } catch (e) {
         if (mounted) {
@@ -87,9 +98,7 @@ class _AddTransactionFormState extends State<AddTransactionForm>
           );
         }
       } finally {
-        if (mounted) {
-          setState(() => _isLoading = false);
-        }
+        if (mounted) setState(() => _isLoading = false);
       }
     }
   }
@@ -98,69 +107,72 @@ class _AddTransactionFormState extends State<AddTransactionForm>
   Widget build(BuildContext context) {
     final isExpense = _tabController.index == 0;
     final categories = isExpense ? _expenseCategories : _incomeCategories;
-    
-    
+
     final buttonColor = isExpense
-        ? Theme.of(context).colorScheme.error
+        ? Theme.of(context).colorScheme.error.withOpacity(0.8)
         : Theme.of(context).colorScheme.secondary;
+
+    final String title = _isEditMode ? 'Editar' : 'Adicionar';
+    final String typeText = isExpense ? 'Gasto' : 'Receita';
+    final String fullTitle = '$title $typeText';
 
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
-        top: 16,
+        left: 16, right: 16, top: 16,
       ),
       child: Form(
         key: _formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TabBar(
-              controller: _tabController,
-              tabs: const [
-                Tab(text: 'Adicionar Gasto'),
-                Tab(text: 'Adicionar Receita'),
-              ],
-              onTap: (_) => setState(() {}),
-            ),
+            if (_isEditMode)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: Text(
+                  fullTitle,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            else
+              TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'Adicionar Gasto'),
+                  Tab(text: 'Adicionar Receita')
+                ],
+                onTap: (_) => setState(() {}),
+              ),
             const SizedBox(height: 24),
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(labelText: 'Descrição'),
-              validator: (value) =>
-                  (value?.isEmpty ?? true) ? 'Campo obrigatório' : null,
+              validator: (v) => (v?.isEmpty ?? true) ? 'Campo obrigatório' : null,
             ),
             const SizedBox(height: 16),
-            AnimatedBuilder(
-              animation: _tabController,
-              builder: (context, child) {
-                return DropdownButtonFormField<String>(
-                  value: _selectedCategory,
-                  hint: const Text('Categoria'),
-                  items: categories.map((String category) {
-                    return DropdownMenuItem<String>(
-                      value: category,
-                      child: Text(category),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() => _selectedCategory = newValue);
-                  },
-                  validator: (value) =>
-                      value == null ? 'Selecione uma categoria' : null,
+            DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              hint: const Text('Categoria'),
+              items: categories.map((String category) {
+                return DropdownMenuItem<String>(
+                  value: category,
+                  child: Text(category),
                 );
-              },
+              }).toList(),
+              onChanged: (newValue) => setState(() => _selectedCategory = newValue),
+              validator: (v) => v == null ? 'Selecione uma categoria' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _amountController,
               decoration: const InputDecoration(labelText: 'Valor (R\$)'),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              validator: (value) {
-                if (value?.isEmpty ?? true) return 'Campo obrigatório';
-                if (double.tryParse(value!) == null) return 'Valor inválido';
+              // CORREÇÃO AQUI: TextInputype -> TextInputType
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              validator: (v) {
+                if (v?.isEmpty ?? true) return 'Campo obrigatório';
+                if (double.tryParse(v!) == null) return 'Valor inválido';
                 return null;
               },
             ),
@@ -174,7 +186,7 @@ class _AddTransactionFormState extends State<AddTransactionForm>
                   onPressed: _submitForm,
                   style: ElevatedButton.styleFrom(backgroundColor: buttonColor),
                   child: Text(
-                      isExpense ? 'Adicionar Gasto' : 'Adicionar Receita',
+                      fullTitle,
                       style: const TextStyle(color: Colors.white)),
                 ),
               ),

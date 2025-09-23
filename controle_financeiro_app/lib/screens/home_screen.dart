@@ -1,5 +1,3 @@
-
-
 import 'package:controle_financeiro_app/models/financial_transaction.dart';
 import 'package:controle_financeiro_app/providers/theme_provider.dart';
 import 'package:controle_financeiro_app/services/auth_service.dart';
@@ -208,7 +206,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFilterControls() {
     return Card(
-     
       margin: const EdgeInsets.only(bottom: 24),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -501,6 +498,20 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Icon(Icons.delete, color: Colors.white),
             ),
             child: ListTile(
+              // NOVO: Ícone de edição para abrir o formulário
+              leading: IconButton(
+                icon: Icon(Icons.edit_note,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    // Passamos a transação específica para o formulário
+                    builder: (ctx) =>
+                        AddTransactionForm(transaction: transaction),
+                  );
+                },
+              ),
               title: Text(transaction.description),
               subtitle: Text(transaction.category),
               trailing: Text(
