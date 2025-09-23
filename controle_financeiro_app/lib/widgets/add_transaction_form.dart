@@ -26,10 +26,19 @@ class _AddTransactionFormState extends State<AddTransactionForm>
   late bool _isEditMode;
 
   final List<String> _expenseCategories = [
-    'Alimentação', 'Transporte', 'Lazer', 'Moradia', 'Saúde', 'Outros'
+    'Alimentação',
+    'Transporte',
+    'Lazer',
+    'Moradia',
+    'Saúde',
+    'Outros'
   ];
   final List<String> _incomeCategories = [
-    'Salário', 'Investimentos', 'Freelance', 'Presente', 'Outros'
+    'Salário',
+    'Investimentos',
+    'Freelance',
+    'Presente',
+    'Outros'
   ];
 
   @override
@@ -119,7 +128,9 @@ class _AddTransactionFormState extends State<AddTransactionForm>
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16, right: 16, top: 16,
+        left: 16,
+        right: 16,
+        top: 16,
       ),
       child: Form(
         key: _formKey,
@@ -132,8 +143,8 @@ class _AddTransactionFormState extends State<AddTransactionForm>
                 child: Text(
                   fullTitle,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               )
             else
@@ -149,7 +160,8 @@ class _AddTransactionFormState extends State<AddTransactionForm>
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(labelText: 'Descrição'),
-              validator: (v) => (v?.isEmpty ?? true) ? 'Campo obrigatório' : null,
+              validator: (v) =>
+                  (v?.isEmpty ?? true) ? 'Campo obrigatório' : null,
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -161,7 +173,8 @@ class _AddTransactionFormState extends State<AddTransactionForm>
                   child: Text(category),
                 );
               }).toList(),
-              onChanged: (newValue) => setState(() => _selectedCategory = newValue),
+              onChanged: (newValue) =>
+                  setState(() => _selectedCategory = newValue),
               validator: (v) => v == null ? 'Selecione uma categoria' : null,
             ),
             const SizedBox(height: 16),
@@ -169,7 +182,8 @@ class _AddTransactionFormState extends State<AddTransactionForm>
               controller: _amountController,
               decoration: const InputDecoration(labelText: 'Valor (R\$)'),
               // CORREÇÃO AQUI: TextInputype -> TextInputType
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               validator: (v) {
                 if (v?.isEmpty ?? true) return 'Campo obrigatório';
                 if (double.tryParse(v!) == null) return 'Valor inválido';
@@ -185,8 +199,7 @@ class _AddTransactionFormState extends State<AddTransactionForm>
                 child: ElevatedButton(
                   onPressed: _submitForm,
                   style: ElevatedButton.styleFrom(backgroundColor: buttonColor),
-                  child: Text(
-                      fullTitle,
+                  child: Text(fullTitle,
                       style: const TextStyle(color: Colors.white)),
                 ),
               ),
