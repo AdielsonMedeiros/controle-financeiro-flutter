@@ -1,3 +1,5 @@
+// lib/services/auth_service.dart
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -5,6 +7,24 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  Future<void> signUpWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+          email: email, password: password);
+      
+      final user = userCredential.user;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+      }
+    } catch (e) {
+      print(e);
+      rethrow;
+    }
+  }
 
   Future<void> signInWithEmail({
     required String email,
@@ -18,18 +38,16 @@ class AuthService {
     }
   }
 
-  Future<void> signUpWithEmail({
-    required String email,
-    required String password,
-  }) async {
+  // --- NOVO MÉTODO ADICIONADO AQUI ---
+  Future<void> sendPasswordResetEmail({required String email}) async {
     try {
-      await _auth.createUserWithEmailAndPassword(
-          email: email, password: password);
+      await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
       print(e);
       rethrow;
     }
   }
+  // ------------------------------------
 
   Future<void> signInWithGoogle() async {
     try {
@@ -56,7 +74,6 @@ class AuthService {
   Future<void> signInWithGitHub() async {
     try {
       GithubAuthProvider githubProvider = GithubAuthProvider();
-
       await _auth.signInWithProvider(githubProvider);
     } catch (e) {
       print(e);

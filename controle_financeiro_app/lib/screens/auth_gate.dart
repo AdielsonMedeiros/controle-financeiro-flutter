@@ -1,7 +1,9 @@
-
+// lib/auth_gate.dart
 
 import 'package:controle_financeiro_app/screens/auth_screen.dart';
 import 'package:controle_financeiro_app/screens/tabs_screen.dart';
+// Importe a nova tela de verificação que criaremos a seguir
+import 'package:controle_financeiro_app/screens/verify_email_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -14,15 +16,23 @@ class AuthGate extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
-        
+        // Se o usuário está logado
         if (snapshot.hasData) {
-          return const TabsScreen();
+          final user = snapshot.data!;
+          // Verificamos se o e-mail dele foi verificado
+          if (user.emailVerified) {
+            // Se sim, vai para a tela principal
+            return const TabsScreen();
+          } else {
+            // Se não, vai para a tela de verificação
+            return const VerifyEmailScreen();
+          }
         }
         
-        
+        // Se não está logado, vai para a tela de autenticação
         return const AuthScreen();
       },
     );

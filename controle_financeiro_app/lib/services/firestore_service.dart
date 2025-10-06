@@ -99,9 +99,6 @@ class FirestoreService {
         .set(budgets, SetOptions(merge: true));
   }
   
-  // --- NOVOS MÉTODOS PARA CATEGORIAS ---
-
-  /// Stream para ouvir as categorias em tempo real
   Stream<Categories> getCategoriesStream(String userId) {
     final docRef = _db
         .collection('users')
@@ -113,13 +110,11 @@ class FirestoreService {
       if (snapshot.exists) {
         return Categories.fromFirestore(snapshot);
       } else {
-        // Retorna um objeto vazio se o documento não existir
         return Categories(expenseCategories: [], incomeCategories: []);
       }
     });
   }
 
-  /// Método para salvar (adicionar/remover) categorias
   Future<void> saveCategories(String userId, Categories categories) async {
     final docRef = _db
         .collection('users')
