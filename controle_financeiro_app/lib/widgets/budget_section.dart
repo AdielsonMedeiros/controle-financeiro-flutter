@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 
 class BudgetSection extends StatefulWidget {
   final List<FinancialTransaction> expenses;
-  // MODIFICADO: Recebe a lista completa de categorias
   final List<String> allExpenseCategories;
 
   const BudgetSection({
@@ -29,8 +28,6 @@ class _BudgetSectionState extends State<BudgetSection> {
   bool _isLoading = false;
   late Map<String, FocusNode> _focusNodes;
 
-  // REMOVIDO: A lista fixa de categorias foi removida daqui
-
   @override
   void initState() {
     super.initState();
@@ -40,8 +37,8 @@ class _BudgetSectionState extends State<BudgetSection> {
   @override
   void didUpdateWidget(covariant BudgetSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Garante que os controllers sejam atualizados se a lista de categorias mudar
-    if (!listEquals(oldWidget.allExpenseCategories, widget.allExpenseCategories)) {
+    if (!listEquals(
+        oldWidget.allExpenseCategories, widget.allExpenseCategories)) {
       _disposeControllers();
       _initializeControllers();
     }
@@ -70,9 +67,8 @@ class _BudgetSectionState extends State<BudgetSection> {
   Future<void> _saveBudgets() async {
     FocusScope.of(context).unfocus();
     setState(() => _isLoading = true);
-
     final newBudgets = <String, double>{};
-    // MODIFICADO: Itera sobre a lista de categorias do widget
+
     for (var category in widget.allExpenseCategories) {
       final controller = _budgetControllers[category];
       if (controller != null) {
@@ -85,14 +81,25 @@ class _BudgetSectionState extends State<BudgetSection> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: const Text('Orçamentos salvos com sucesso!'),
-              backgroundColor: Theme.of(context).colorScheme.secondary),
+            content: const Text('Orçamentos salvos com sucesso!'),
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar orçamentos: $e')),
+          SnackBar(
+            content: Text('Erro ao salvar orçamentos: $e'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
         );
       }
     } finally {
@@ -105,7 +112,6 @@ class _BudgetSectionState extends State<BudgetSection> {
   @override
   Widget build(BuildContext context) {
     if (_userId == null) return const SizedBox.shrink();
-
     return StreamBuilder<Budget>(
       stream: _firestoreService.getBudgetsStream(_userId!),
       builder: (context, snapshot) {
@@ -113,6 +119,7 @@ class _BudgetSectionState extends State<BudgetSection> {
             _budgetControllers.values.every((c) => c.text.isEmpty)) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (snapshot.hasError) {
           return Center(
               child: Text("Erro ao carregar orçamentos: ${snapshot.error}"));
@@ -125,7 +132,6 @@ class _BudgetSectionState extends State<BudgetSection> {
             final controller = _budgetControllers[category]!;
             final formattedValue = value > 0 ? value.toStringAsFixed(2) : '';
             final focusNode = _focusNodes[category]!;
-
             if (!focusNode.hasFocus && controller.text != formattedValue) {
               controller.text = formattedValue;
             }
@@ -144,7 +150,6 @@ class _BudgetSectionState extends State<BudgetSection> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // MODIFICADO: Itera sobre a lista de categorias do widget
             ...widget.allExpenseCategories.map((category) {
               final budgetAmount = budget.categories[category] ?? 0.0;
               final spentAmount = spentByCategory[category] ?? 0.0;
@@ -169,12 +174,25 @@ class _BudgetSectionState extends State<BudgetSection> {
             else
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                height: 48,
+                child: ElevatedButton.icon(
                   onPressed: _saveBudgets,
+                  icon: const Icon(Icons.save_rounded),
+                  label: const Text(
+                    'Salvar Orçamentos',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.secondary),
-                  child: const Text('Salvar Orçamentos',
-                      style: TextStyle(color: Colors.white)),
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
                 ),
               ),
           ],
@@ -184,65 +202,139 @@ class _BudgetSectionState extends State<BudgetSection> {
   }
 
   Widget _buildBudgetItem(
-      BuildContext context,
-      String category,
-      double spent,
-      double budget,
-      double progress,
-      bool isOverBudget,
-      TextEditingController controller,
-      FocusNode focusNode) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(category,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(
-                  'R\$ ${spent.toStringAsFixed(2)} / R\$ ${budget.toStringAsFixed(2)}',
+    BuildContext context,
+    String category,
+    double spent,
+    double budget,
+    double progress,
+    bool isOverBudget,
+    TextEditingController controller,
+    FocusNode focusNode,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isOverBudget
+              ? Theme.of(context).colorScheme.error.withOpacity(0.3)
+              : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: (isOverBudget
+                              ? Theme.of(context).colorScheme.error
+                              : Theme.of(context).colorScheme.primary)
+                          .withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.category_rounded,
+                      size: 18,
+                      color: isOverBudget
+                          ? Theme.of(context).colorScheme.error
+                          : Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    category,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (isOverBudget
+                          ? Theme.of(context).colorScheme.error
+                          : Theme.of(context).colorScheme.primary)
+                      .withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${(progress * 100).toStringAsFixed(0)}%',
                   style: TextStyle(
                     color: isOverBudget
                         ? Theme.of(context).colorScheme.error
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontWeight:
-                        isOverBudget ? FontWeight.bold : FontWeight.normal,
+                        : Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: progress.clamp(0.0, 1.0),
-                minHeight: 12,
-                backgroundColor: Theme.of(context).colorScheme.outline,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  isOverBudget
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'R\$ ${spent.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: isOverBudget
                       ? Theme.of(context).colorScheme.error
-                      : Theme.of(context).colorScheme.primary,
+                      : Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              focusNode: focusNode,
-              controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Definir Orçamento (R\$)',
-                isDense: true,
-                border: OutlineInputBorder(),
+              Text(
+                'de R\$ ${budget.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
               ),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              minHeight: 10,
+              backgroundColor:
+                  Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              valueColor: AlwaysStoppedAnimation(
+                isOverBudget
+                    ? Theme.of(context).colorScheme.error
+                    : Theme.of(context).colorScheme.primary,
+              ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            focusNode: focusNode,
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: 'Definir Orçamento (R\$)',
+              prefixIcon: const Icon(Icons.edit_rounded, size: 20),
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+              fillColor: Theme.of(context).colorScheme.surface,
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+        ],
       ),
     );
   }

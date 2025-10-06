@@ -1,7 +1,4 @@
-
-
 import 'package:flutter/material.dart';
-
 
 abstract class AppColorsLight {
   static const Color primaria = Color(0xFF4F46E5);
@@ -14,7 +11,6 @@ abstract class AppColorsLight {
   static const Color borda = Color(0xFFE2E8F0);
 }
 
-
 abstract class AppColorsDark {
   static const Color primaria = Color(0xFF4F46E5);
   static const Color fundo = Color(0xFF111827);
@@ -25,7 +21,6 @@ abstract class AppColorsDark {
   static const Color erro = Color(0xFFEF4444);
   static const Color borda = Color(0xFF374151);
 }
-
 
 class AppThemes {
   static final ThemeData lightTheme = ThemeData(
@@ -41,8 +36,8 @@ class AppThemes {
       onSurface: AppColorsLight.texto,
       background: AppColorsLight.fundo,
       onBackground: AppColorsLight.texto,
-      outline: AppColorsLight.borda, 
-      onSurfaceVariant: AppColorsLight.textoSuave, 
+      outline: AppColorsLight.borda,
+      onSurfaceVariant: AppColorsLight.textoSuave,
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
@@ -70,8 +65,8 @@ class AppThemes {
       onSurface: AppColorsDark.texto,
       background: AppColorsDark.fundo,
       onBackground: AppColorsDark.texto,
-      outline: AppColorsDark.borda, 
-      onSurfaceVariant: AppColorsDark.textoSuave, 
+      outline: AppColorsDark.borda,
+      onSurfaceVariant: AppColorsDark.textoSuave,
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
