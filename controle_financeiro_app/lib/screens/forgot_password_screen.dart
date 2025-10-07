@@ -23,9 +23,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
 
     setState(() => _isLoading = true);
-
     try {
-      await _authService.sendPasswordResetEmail(email: _emailController.text.trim());
+      await _authService.sendPasswordResetEmail(
+          email: _emailController.text.trim());
       _showSuccessDialog();
     } on FirebaseAuthException catch (e) {
       String message = 'Ocorreu um erro. Tente novamente.';
@@ -34,6 +34,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       } else if (e.code == 'invalid-email') {
         message = 'O formato do e-mail é inválido.';
       }
+
       _showErrorSnackbar(message);
     } catch (e) {
       _showErrorSnackbar('Ocorreu um erro inesperado.');
