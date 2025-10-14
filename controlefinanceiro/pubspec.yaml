@@ -1,0 +1,62 @@
+name: controlefinanceiro
+description: "A new Flutter project."
+publish_to: "none"
+version: 0.0.2+4
+
+environment:
+  sdk: ">=3.0.0 <4.0.0" # Atualizado para uma faixa mais comum
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Ícones
+  cupertino_icons: ^1.0.8
+  flutter_svg: ^2.0.7
+
+  # Gerenciamento de Estado
+  provider: ^6.1.2
+  flutter_riverpod: ^2.5.1
+
+  # Persistência e Utilitários
+  shared_preferences: ^2.2.3
+  path_provider: ^2.1.3
+  rxdart: ^0.27.7
+  intl: ^0.19.0
+
+  # Ferramentas de Exportação
+  csv: ^6.0.0
+  pdf: ^3.10.8
+  share_plus: ^9.0.0
+
+  # Firebase
+  firebase_core: ^2.32.0
+  firebase_auth: ^4.20.0
+  cloud_firestore: ^4.17.5
+  google_sign_in: ^6.2.1
+  firebase_messaging: ^14.9.4
+
+  # UI & Gráficos
+  fl_chart: ^0.68.0
+  firebase_crashlytics: ^3.5.7
+
+  # Notificações locais
+  flutter_local_notifications: ^17.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+
+# <-- CORREÇÃO: A seção de ícones foi movida para cá.
+# Ela está no nível principal do arquivo, não dentro de 'flutter:'.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/LOGO.png"

@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "469665350572",
+    "project_id": "meu-controle-financeiro-f2cdb",
+    "storage_bucket": "meu-controle-financeiro-f2cdb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:469665350572:android:f65379a24efa2c8bba7009",
+        "android_client_info": {
+          "package_name": "br.com.adielsontech.controlefinanceiro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "469665350572-5atlfphm0i7dhucm2sju4guf6j3ju0s2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJWvl28U_o9Fe_oR5TKaZc92jO-te3K4w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "469665350572-5atlfphm0i7dhucm2sju4guf6j3ju0s2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "469665350572-gjkurdpnh7orb188smgpnmof19a4vsi6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.controleFinanceiroApp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:469665350572:android:04e8da086626cd20ba7009",
+        "android_client_info": {
+          "package_name": "com.example.controle_financeiro_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "469665350572-0i9pvqstt117reobuagrunantlfu45ad.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.controle_financeiro_app",
+            "certificate_hash": "d7e5c945f4c33414ca544b82d5548534cba55f33"
+          }
+        },
+        {
+          "client_id": "469665350572-5atlfphm0i7dhucm2sju4guf6j3ju0s2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJWvl28U_o9Fe_oR5TKaZc92jO-te3K4w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "469665350572-5atlfphm0i7dhucm2sju4guf6j3ju0s2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "469665350572-gjkurdpnh7orb188smgpnmof19a4vsi6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.controleFinanceiroApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
