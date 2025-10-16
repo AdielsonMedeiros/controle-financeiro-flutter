@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "458889744867",
+    "project_id": "carteira-de-boletos-a05ea",
+    "storage_bucket": "carteira-de-boletos-a05ea.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458889744867:android:aa0115ed86dc6b0d8f90d6",
+        "android_client_info": {
+          "package_name": "br.com.adielsontech.carteiradeboleto"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "458889744867-904u8ms7jmp6t48na2etlhv3no9cvo2l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcnUq3i921mUV66B7r01cP0zdgpC5aJ8U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "458889744867-904u8ms7jmp6t48na2etlhv3no9cvo2l.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "458889744867-3ml1tkndueotqe06f3hpckuspta4f8lt.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.carteiraDeBoleto"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458889744867:android:f4ed1f365c0e30508f90d6",
+        "android_client_info": {
+          "package_name": "com.example.carteira_de_boleto"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "458889744867-gq99sl7cfpdl87tqu313ec8ph9c0ia8s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.carteira_de_boleto",
+            "certificate_hash": "d7e5c945f4c33414ca544b82d5548534cba55f33"
+          }
+        },
+        {
+          "client_id": "458889744867-904u8ms7jmp6t48na2etlhv3no9cvo2l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcnUq3i921mUV66B7r01cP0zdgpC5aJ8U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "458889744867-904u8ms7jmp6t48na2etlhv3no9cvo2l.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "458889744867-3ml1tkndueotqe06f3hpckuspta4f8lt.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.carteiraDeBoleto"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
