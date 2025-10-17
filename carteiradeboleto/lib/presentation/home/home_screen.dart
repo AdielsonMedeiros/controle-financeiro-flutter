@@ -216,15 +216,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     return Scaffold(
       appBar: AppBar(
-        
-        
         title: Image.asset(
-          'assets/icon_logo.png', 
-          height: 60, 
-          
+          'assets/icon_logo.png',
+          height: 45,
           color: isDarkMode ? Colors.white : null,
         ),
-        
         centerTitle: false,
         actions: [
           IconButton(
@@ -454,7 +450,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           showDialog(
             context: context,
@@ -462,7 +458,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           );
         },
         tooltip: 'Adicionar Boleto',
-        child: const Icon(PhosphorIcons.plus),
+        icon: const Icon(PhosphorIcons.plus, size: 24),
+        label: const Text(
+          'Novo Boleto',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
+        elevation: 4,
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
       ),
     );
   }
