@@ -17,6 +17,7 @@ import '../profile/share_boletos_screen.dart';
 import '../requests/requests_screen.dart';
 import 'summary_screen.dart';
 import 'widgets/add_boleto_dialog.dart';
+import '../../theme/financial_gradients.dart';
 import 'widgets/boleto_card.dart';
 import 'widgets/paid_boleto_card.dart';
 import 'widgets/share_boleto_dialog.dart';
@@ -104,14 +105,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    isPaidList
-                        ? PhosphorIcons.receipt
-                        : PhosphorIcons.checkCircleFill,
-                    size: 100,
-                    color: isPaidList
-                        ? theme.colorScheme.onSurfaceVariant
-                        : Colors.green.shade400,
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isPaidList
+                            ? [
+                                theme.colorScheme.primary.withOpacity(0.15),
+                                theme.colorScheme.tertiary.withOpacity(0.1),
+                              ]
+                            : [
+                                Colors.green.shade400.withOpacity(0.2),
+                                Colors.green.shade300.withOpacity(0.1),
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    child: Icon(
+                      isPaidList
+                          ? PhosphorIcons.receiptFill
+                          : PhosphorIcons.checkCircleFill,
+                      size: 72,
+                      color: isPaidList
+                          ? theme.colorScheme.primary
+                          : Colors.green.shade400,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -222,12 +240,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           color: isDarkMode ? Colors.white : null,
         ),
         centerTitle: false,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF059669).withOpacity(0.1),
+                const Color(0xFFD97706).withOpacity(0.05),
+                const Color(0xFF0891B2).withOpacity(0.03),
+              ],
+            ),
+          ),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(PhosphorIcons.chartBar),
-            tooltip: 'Métricas',
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const MetricsScreen())),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.primary.withOpacity(0.3),
+                width: 1.5,
+              ),
+            ),
+            child: IconButton(
+              icon: const Icon(PhosphorIcons.chartBarFill),
+              tooltip: 'Métricas',
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const MetricsScreen())),
+            ),
           ),
           StreamBuilder<QuerySnapshot>(
             stream: _firestoreService.getFriendRequests(),
@@ -246,13 +287,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   return Stack(
                     alignment: Alignment.center,
                     children: [
-                      IconButton(
-                        icon: const Icon(PhosphorIcons.bell),
-                        tooltip: 'Solicitações',
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RequestsScreen(),
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(PhosphorIcons.bellFill),
+                          tooltip: 'Solicitações',
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RequestsScreen(),
+                            ),
                           ),
                         ),
                       ),
@@ -286,20 +337,40 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(PhosphorIcons.usersThree),
-            tooltip: 'Grupos',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const GroupsScreen()),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.primary.withOpacity(0.3),
+                width: 1.5,
+              ),
+            ),
+            child: IconButton(
+              icon: const Icon(PhosphorIcons.usersThreeFill),
+              tooltip: 'Grupos',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const GroupsScreen()),
+              ),
             ),
           ),
-          IconButton(
-            icon: const Icon(PhosphorIcons.users),
-            tooltip: 'Amigos',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const FriendsScreen()),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.primary.withOpacity(0.3),
+                width: 1.5,
+              ),
+            ),
+            child: IconButton(
+              icon: const Icon(PhosphorIcons.usersFill),
+              tooltip: 'Amigos',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FriendsScreen()),
+              ),
             ),
           ),
           StreamBuilder<DocumentSnapshot>(
@@ -343,7 +414,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   const PopupMenuItem<String>(
                     value: 'summary',
                     child: ListTile(
-                      leading: Icon(PhosphorIcons.chartPieSlice),
+                      leading: Icon(PhosphorIcons.chartPieSliceFill),
                       title: Text('Resumo Financeiro'),
                     ),
                   ),
@@ -351,21 +422,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   const PopupMenuItem<String>(
                     value: 'profile',
                     child: ListTile(
-                      leading: Icon(PhosphorIcons.user),
+                      leading: Icon(PhosphorIcons.userCircleFill),
                       title: Text('Perfil'),
                     ),
                   ),
                   const PopupMenuItem<String>(
                     value: 'sent',
                     child: ListTile(
-                      leading: Icon(PhosphorIcons.paperPlaneTilt),
+                      leading: Icon(PhosphorIcons.paperPlaneTiltFill),
                       title: Text('Boletos Enviados'),
                     ),
                   ),
                   const PopupMenuItem<String>(
                     value: 'logout',
                     child: ListTile(
-                      leading: Icon(PhosphorIcons.signOut),
+                      leading: Icon(PhosphorIcons.signOutBold),
                       title: Text('Sair'),
                     ),
                   ),
@@ -375,19 +446,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     horizontal: 12.0,
                     vertical: 8.0,
                   ),
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                    backgroundImage: (photoURL != null && photoURL.isNotEmpty)
-                        ? NetworkImage(photoURL)
-                        : null,
-                    child: (photoURL == null || photoURL.isEmpty)
-                        ? Icon(
-                            PhosphorIcons.user,
-                            color: theme.colorScheme.onSurfaceVariant,
-                            size: 22,
-                          )
-                        : null,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: (photoURL == null || photoURL.isEmpty)
+                          ? LinearGradient(
+                              colors: [
+                                theme.colorScheme.primary.withOpacity(0.2),
+                                theme.colorScheme.tertiary.withOpacity(0.1),
+                              ],
+                            )
+                          : null,
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: (photoURL == null || photoURL.isEmpty)
+                          ? Colors.transparent
+                          : theme.colorScheme.surfaceContainerHighest,
+                      backgroundImage: (photoURL != null && photoURL.isNotEmpty)
+                          ? NetworkImage(photoURL)
+                          : null,
+                      child: (photoURL == null || photoURL.isEmpty)
+                          ? Icon(
+                              PhosphorIcons.userCircleFill,
+                              color: theme.colorScheme.primary,
+                              size: 22,
+                            )
+                          : null,
+                    ),
                   ),
                 ),
               );
@@ -398,74 +491,126 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           controller: _tabController,
           tabs: const <Widget>[
             Tab(
-              icon: Icon(PhosphorIcons.hourglass),
+              icon: Icon(PhosphorIcons.hourglassMediumFill),
               text: 'Pendentes',
             ),
             Tab(
-              icon: Icon(PhosphorIcons.check),
+              icon: Icon(PhosphorIcons.checkCircleFill),
               text: 'Pagos',
             ),
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: TextField(
-              controller: _searchController,
-              decoration: inputDecorationTheme.copyWith(
-                labelText: 'Buscar por descrição ou tag...',
-                prefixIcon: const Icon(PhosphorIcons.magnifyingGlass),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: FinancialGradients.backgroundSubtle(context),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF059669).withOpacity(0.15),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                decoration: inputDecorationTheme.copyWith(
+                  labelText: 'Buscar por descrição ou tag...',
+                  prefixIcon: Container(
+                    margin: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF059669).withOpacity(0.2),
+                          const Color(0xFF0891B2).withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      PhosphorIcons.magnifyingGlassBold,
+                      color: theme.colorScheme.primary,
+                      size: 20,
+                    ),
+                  ),
                 suffixIcon: ValueListenableBuilder<String>(
                   valueListenable: _searchQuery,
                   builder: (context, value, child) {
                     return value.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(PhosphorIcons.xCircle),
+                            icon: const Icon(PhosphorIcons.xCircleFill),
                             onPressed: () {
                               _searchController.clear();
                             },
                           )
                         : const SizedBox.shrink();
                   },
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: <Widget>[
-                _buildBoletoList(
-                  stream: _firestoreService.getUnpaidBoletosStream(),
-                  isPaidList: false,
-                ),
-                _buildBoletoList(
-                  stream: _firestoreService.getPaidBoletosStream(),
-                  isPaidList: true,
-                ),
-              ],
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: <Widget>[
+                  _buildBoletoList(
+                    stream: _firestoreService.getUnpaidBoletosStream(),
+                    isPaidList: false,
+                  ),
+                  _buildBoletoList(
+                    stream: _firestoreService.getPaidBoletosStream(),
+                    isPaidList: true,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => const AddBoletoDialog(),
-          );
-        },
-        tooltip: 'Adicionar Boleto',
-        icon: const Icon(PhosphorIcons.plus, size: 24),
-        label: const Text(
-          'Novo Boleto',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          ],
         ),
-        elevation: 4,
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
+      ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              theme.colorScheme.primary,
+              theme.colorScheme.secondary,
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.primary.withOpacity(0.4),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => const AddBoletoDialog(),
+            );
+          },
+          tooltip: 'Adicionar Boleto',
+          icon: const Icon(PhosphorIcons.plus, size: 24),
+          label: const Text(
+            'Novo Boleto',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+        ),
       ),
     );
   }

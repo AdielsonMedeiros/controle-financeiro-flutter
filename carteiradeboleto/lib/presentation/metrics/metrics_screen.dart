@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../data/services/firestore_service.dart';
+import '../../theme/financial_gradients.dart';
 
 enum FilterType { month, year, custom }
 
@@ -106,8 +107,24 @@ class _MetricsScreenState extends State<MetricsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Métricas de Gastos'),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF059669).withOpacity(0.1),
+                const Color(0xFFD97706).withOpacity(0.05),
+              ],
+            ),
+          ),
+        ),
       ),
-      body: ListView(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: FinancialGradients.backgroundSubtle(context),
+        ),
+        child: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
           _buildFilterChips(),
@@ -144,7 +161,8 @@ class _MetricsScreenState extends State<MetricsScreen> {
             const Divider(height: 24),
             ..._generateLegend(_metricsData),
           ]
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -155,7 +173,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
       alignment: WrapAlignment.center,
       children: [
         FilterChip(
-          avatar: const Icon(PhosphorIcons.calendar),
+          avatar: const Icon(PhosphorIcons.calendarFill),
           label: const Text('Este Mês'),
           selected: _activeFilter == FilterType.month,
           onSelected: (selected) {
@@ -163,7 +181,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
           },
         ),
         FilterChip(
-          avatar: const Icon(PhosphorIcons.calendarBlank),
+          avatar: const Icon(PhosphorIcons.calendarBlankFill),
           label: const Text('Este Ano'),
           selected: _activeFilter == FilterType.year,
           onSelected: (selected) {
@@ -171,7 +189,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
           },
         ),
         FilterChip(
-          avatar: const Icon(PhosphorIcons.calendarPlus),
+          avatar: const Icon(PhosphorIcons.calendarPlusFill),
           label: const Text('Período'),
           selected: _activeFilter == FilterType.custom,
           onSelected: (_) => _selectCustomDateRange(context),
@@ -195,10 +213,21 @@ class _MetricsScreenState extends State<MetricsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              
-              Icon(PhosphorIcons.chartPieSlice,
-                  size: 60,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                      Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(PhosphorIcons.chartPieSliceFill,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.primary),
+              ),
               const SizedBox(height: 16),
               Text('Nenhum boleto pago encontrado para o período.',
                   textAlign: TextAlign.center,
@@ -226,16 +255,16 @@ class _MetricsScreenState extends State<MetricsScreen> {
 
   List<PieChartSectionData> _generateChartSections(Map<String, double> data) {
     final List<Color> colors = [
-      Colors.blue,
-      Colors.red,
-      Colors.green,
-      Colors.orange,
-      Colors.purple,
-      Colors.brown,
-      Colors.teal,
-      Colors.pink,
-      Colors.indigo,
-      Colors.amber
+      const Color(0xFF059669),
+      const Color(0xFFD97706),
+      const Color(0xFF0891B2),
+      const Color(0xFF10B981),
+      const Color(0xFFF59E0B),
+      const Color(0xFF34D399),
+      const Color(0xFF0EA5E9),
+      const Color(0xFFFBBF24),
+      const Color(0xFF38BDF8),
+      const Color(0xFF22D3EE)
     ];
     int colorIndex = 0;
 
@@ -263,16 +292,16 @@ class _MetricsScreenState extends State<MetricsScreen> {
 
   List<Widget> _generateLegend(Map<String, double> data) {
     final List<Color> colors = [
-      Colors.blue,
-      Colors.red,
-      Colors.green,
-      Colors.orange,
-      Colors.purple,
-      Colors.brown,
-      Colors.teal,
-      Colors.pink,
-      Colors.indigo,
-      Colors.amber
+      const Color(0xFF059669),
+      const Color(0xFFD97706),
+      const Color(0xFF0891B2),
+      const Color(0xFF10B981),
+      const Color(0xFFF59E0B),
+      const Color(0xFF34D399),
+      const Color(0xFF0EA5E9),
+      const Color(0xFFFBBF24),
+      const Color(0xFF38BDF8),
+      const Color(0xFF22D3EE)
     ];
     int colorIndex = 0;
 

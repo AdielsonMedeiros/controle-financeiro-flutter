@@ -5,6 +5,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../data/models/boleto_model.dart';
 import '../../../data/services/firestore_service.dart';
 import 'barcode_scanner_screen.dart';
+import '../../../theme/financial_gradients.dart';
 
 class AddBoletoDialog extends StatefulWidget {
   const AddBoletoDialog({super.key});
@@ -36,18 +37,40 @@ class _AddBoletoDialogState extends State<AddBoletoDialog> {
     // Tema de decoração para os campos de texto
     final inputDecorationTheme = InputDecoration(
       filled: true,
-      fillColor: fillColor, // APLICA A COR DEFINIDA ACIMA
+      fillColor: fillColor,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,
       ),
-      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: theme.colorScheme.primary,
+          width: 2,
+        ),
+      ),
+      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
     );
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: MediaQuery.of(context).viewInsets.bottom > 0 ? 16 : 40,
+      ),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500),
+        width: MediaQuery.of(context).size.width,
+        constraints: BoxConstraints(
+          maxWidth: 500,
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -56,8 +79,8 @@ class _AddBoletoDialogState extends State<AddBoletoDialog> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    theme.colorScheme.primaryContainer,
-                    theme.colorScheme.primaryContainer.withOpacity(0.7),
+                    const Color(0xFF059669).withOpacity(0.2),
+                    const Color(0xFFD97706).withOpacity(0.1),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -76,12 +99,24 @@ class _AddBoletoDialogState extends State<AddBoletoDialog> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withOpacity(0.2),
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF059669).withOpacity(0.3),
+                                const Color(0xFF0891B2).withOpacity(0.2),
+                              ],
+                            ),
                             borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF059669).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Icon(
-                            PhosphorIcons.receipt,
-                            color: theme.colorScheme.primary,
+                            PhosphorIcons.receiptFill,
+                            color: Colors.white,
                             size: 28,
                           ),
                         ),
@@ -128,13 +163,12 @@ class _AddBoletoDialogState extends State<AddBoletoDialog> {
               ),
             ),
             // Formulário
-            Flexible(
+            Expanded(
               child: Form(
                 key: _formKey,
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       TextFormField(
@@ -142,41 +176,37 @@ class _AddBoletoDialogState extends State<AddBoletoDialog> {
                         decoration: inputDecorationTheme.copyWith(
                           labelText: 'Descrição',
                           helperText: 'Ex: Conta de luz, Internet, etc.',
-                          prefixIcon: const Icon(PhosphorIcons.textAlignLeft),
+                          prefixIcon: Icon(PhosphorIcons.textAa, color: theme.colorScheme.primary),
                         ),
                         validator: (value) =>
                             value!.isEmpty ? 'Campo obrigatório' : null,
                         textCapitalization: TextCapitalization.sentences,
                       ),
                       const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: TextFormField(
-                              controller: _valueController,
-                              decoration: inputDecorationTheme.copyWith(
-                                labelText: 'Valor',
-                                hintText: '150.75',
-                                prefixIcon: const Icon(PhosphorIcons.coins),
-                                prefixText: 'R\$ ',
-                              ),
-                              keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true),
-                              validator: (value) =>
-                                  value!.isEmpty ? 'Obrigatório' : null,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            flex: 3,
-                            child: TextFormField(
-                              controller: _dueDateController,
-                              decoration: inputDecorationTheme.copyWith(
-                                labelText: 'Vencimento',
-                                prefixIcon: const Icon(PhosphorIcons.calendar),
-                              ),
-                              readOnly: true,
+                      TextFormField(
+                        controller: _valueController,
+                        decoration: inputDecorationTheme.copyWith(
+                          labelText: 'Valor',
+                          hintText: '150,75',
+                          helperText: 'Digite o valor do boleto',
+                          prefixIcon: Icon(PhosphorIcons.currencyCircleDollar, color: theme.colorScheme.primary),
+                          prefixText: 'R\$ ',
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        validator: (value) =>
+                            value!.isEmpty ? 'Campo obrigatório' : null,
+                      ),
+                      const SizedBox(height: 24),
+                      TextFormField(
+                        controller: _dueDateController,
+                        decoration: inputDecorationTheme.copyWith(
+                          labelText: 'Data de Vencimento',
+                          hintText: 'Selecione a data',
+                          helperText: 'Toque para abrir o calendário',
+                          prefixIcon: Icon(PhosphorIcons.calendarCheck, color: theme.colorScheme.primary),
+                        ),
+                        readOnly: true,
                               onTap: () async {
                                 _selectedDate = await showDatePicker(
                                   context: context,
@@ -202,11 +232,8 @@ class _AddBoletoDialogState extends State<AddBoletoDialog> {
                                           .format(_selectedDate!);
                                 }
                               },
-                              validator: (value) =>
-                                  value!.isEmpty ? 'Obrigatório' : null,
-                            ),
-                          ),
-                        ],
+                        validator: (value) =>
+                            value!.isEmpty ? 'Campo obrigatório' : null,
                       ),
                       const SizedBox(height: 20),
                       TextFormField(
@@ -214,7 +241,7 @@ class _AddBoletoDialogState extends State<AddBoletoDialog> {
                         decoration: inputDecorationTheme.copyWith(
                           labelText: 'Categoria',
                           helperText: 'Ex: Contas, Lazer, Saúde',
-                          prefixIcon: const Icon(PhosphorIcons.tag),
+                          prefixIcon: Icon(PhosphorIcons.tagSimple, color: theme.colorScheme.primary),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -230,7 +257,7 @@ class _AddBoletoDialogState extends State<AddBoletoDialog> {
                         decoration: inputDecorationTheme.copyWith(
                           labelText: 'Código de Barras',
                           helperText: 'Opcional - Toque na câmera para escanear',
-                          prefixIcon: const Icon(PhosphorIcons.barcode),
+                          prefixIcon: Icon(PhosphorIcons.barcode, color: theme.colorScheme.primary),
                           suffixIcon: Container(
                             margin: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
@@ -288,7 +315,7 @@ class _AddBoletoDialogState extends State<AddBoletoDialog> {
                     child: const Text('Cancelar'),
                   ),
                   const SizedBox(width: 8),
-                  Flexible(
+                  Expanded(
                     child: ElevatedButton.icon(
                       icon: const Icon(PhosphorIcons.check, size: 18),
                       label: const Text('Adicionar'),
@@ -300,7 +327,8 @@ class _AddBoletoDialogState extends State<AddBoletoDialog> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        elevation: 0,
+                        elevation: 2,
+                        shadowColor: theme.colorScheme.primary.withOpacity(0.3),
                       ),
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {

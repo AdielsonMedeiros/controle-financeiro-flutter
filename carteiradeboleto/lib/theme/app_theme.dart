@@ -4,18 +4,29 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Cor principal mais vibrante - roxo/violeta moderno
-  static const _seedColor = Color(0xFF7C3AED); // Violeta vibrante
+  // Paleta financeira - cores que remetem a dinheiro, crescimento e confiança
+  static const _primaryColor = Color(0xFF059669); // Verde dinheiro
+  static const _secondaryColor = Color(0xFFD97706); // Dourado/Âmbar (ouro)
+  static const _accentColor = Color(0xFF0891B2); // Azul confiança
+  static const _warningColor = Color(0xFFF59E0B); // Âmbar
+  static const _errorColor = Color(0xFFDC2626); // Vermelho
 
   // Tema Claro
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
+    splashColor: _primaryColor.withOpacity(0.2),
+    highlightColor: _primaryColor.withOpacity(0.1),
+    iconTheme: const IconThemeData(color: _primaryColor),
     colorScheme: ColorScheme.fromSeed(
-      seedColor: _seedColor,
+      seedColor: _primaryColor,
       brightness: Brightness.light,
-      primary: _seedColor,
-      secondary: const Color(0xFF10B981), // Verde vibrante para sucesso
+      primary: _primaryColor,
+      secondary: _secondaryColor,
+      tertiary: _accentColor,
+      error: _errorColor,
+      surface: const Color(0xFFFAFBFA), // Verde muito claro
+      background: const Color(0xFFF0FDF4), // Fundo verde suave
     ),
     textTheme: GoogleFonts.interTextTheme(
       ThemeData(brightness: Brightness.light).textTheme,
@@ -66,7 +77,7 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.0),
-        borderSide: const BorderSide(color: _seedColor, width: 2),
+        borderSide: const BorderSide(color: _primaryColor, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 16.0,
@@ -74,12 +85,12 @@ class AppTheme {
       ),
     ),
     tabBarTheme: TabBarThemeData(
-      labelColor: _seedColor,
+      labelColor: _primaryColor,
       unselectedLabelColor: Colors.grey.shade600,
       indicatorSize: TabBarIndicatorSize.tab,
       indicator: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: _seedColor.withOpacity(0.1),
+        color: _primaryColor.withOpacity(0.1),
       ),
       labelStyle: const TextStyle(
         fontWeight: FontWeight.bold,
@@ -116,11 +127,18 @@ class AppTheme {
   static final ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
+    splashColor: const Color(0xFF34D399).withOpacity(0.2),
+    highlightColor: const Color(0xFF34D399).withOpacity(0.1),
+    iconTheme: const IconThemeData(color: Color(0xFF34D399)),
     colorScheme: ColorScheme.fromSeed(
-      seedColor: _seedColor,
+      seedColor: _primaryColor,
       brightness: Brightness.dark,
-      primary: const Color(0xFF9F7AEA), // Violeta mais claro para dark mode
-      secondary: const Color(0xFF34D399), // Verde mais claro para sucesso
+      primary: const Color(0xFF34D399), // Verde mais claro e vibrante
+      secondary: const Color(0xFFFBBF24), // Dourado mais claro
+      tertiary: const Color(0xFF22D3EE), // Azul ciano mais claro
+      error: const Color(0xFFF87171), // Vermelho mais claro
+      surface: const Color(0xFF1F2937), // Cinza escuro neutro
+      background: const Color(0xFF111827), // Fundo cinza escuro
     ),
     textTheme: GoogleFonts.interTextTheme(
       ThemeData(brightness: Brightness.dark).textTheme,
@@ -171,20 +189,20 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.0),
-        borderSide: const BorderSide(color: Color(0xFF9F7AEA), width: 2),
+        borderSide: const BorderSide(color: Color(0xFF34D399), width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 16.0,
         vertical: 16.0,
       ),
     ),
-    tabBarTheme: const TabBarThemeData(
-      labelColor: Color(0xFF9F7AEA),
+    tabBarTheme: TabBarThemeData(
+      labelColor: const Color(0xFF34D399),
       unselectedLabelColor: Colors.grey,
       indicatorSize: TabBarIndicatorSize.tab,
       indicator: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        color: Color(0xFF9F7AEA),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        color: const Color(0xFF34D399).withOpacity(0.2),
       ),
       labelStyle: TextStyle(
         fontWeight: FontWeight.bold,

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../data/services/firestore_service.dart';
+import '../../theme/financial_gradients.dart';
 
 class SummaryScreen extends StatelessWidget {
   const SummaryScreen({super.key});
@@ -17,12 +18,29 @@ class SummaryScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Resumo Financeiro'),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF059669).withOpacity(0.1),
+                const Color(0xFFD97706).withOpacity(0.05),
+              ],
+            ),
+          ),
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          FinancialSummaryDashboard(firestoreService: firestoreService),
-        ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: FinancialGradients.backgroundSubtle(context),
+        ),
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            FinancialSummaryDashboard(firestoreService: firestoreService),
+          ],
+        ),
       ),
     );
   }
@@ -67,8 +85,8 @@ class FinancialSummaryDashboard extends StatelessWidget {
           detail: count > 0
               ? '$count boleto(s) pendente(s)'
               : 'Nenhum boleto para o mês',
-          icon: PhosphorIcons.calendarBlank,
-          color: Colors.orange.shade700,
+          icon: PhosphorIcons.calendarBlankFill,
+          color: const Color(0xFFD97706),
         );
       },
     );
@@ -96,7 +114,7 @@ class FinancialSummaryDashboard extends StatelessWidget {
           detail: count > 0
               ? 'Totalizando ${currencyFormat.format(totalValue)}'
               : 'Nenhum boleto vencido',
-          icon: PhosphorIcons.warningCircle,
+          icon: PhosphorIcons.warningCircleFill,
           
           color: Theme.of(context).colorScheme.error,
         );
@@ -123,8 +141,8 @@ class FinancialSummaryDashboard extends StatelessWidget {
           value: currencyFormat.format(totalValue),
           detail:
               count > 0 ? '$count boleto(s) pagos' : 'Nenhum pagamento no mês',
-          icon: PhosphorIcons.checkCircle,
-          color: Colors.green.shade700,
+          icon: PhosphorIcons.checkCircleFill,
+          color: const Color(0xFF059669),
         );
       },
     );
@@ -154,7 +172,7 @@ class SummaryCard extends StatelessWidget {
   })  : isLoading = true,
         value = '',
         detail = 'Carregando...',
-        icon = PhosphorIcons.dotsThree,
+        icon = PhosphorIcons.dotsThreeFill,
         color = Colors.grey;
 
   @override
@@ -192,7 +210,14 @@ class SummaryCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Icon(icon, size: 28, color: Colors.white.withOpacity(0.8)),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 24, color: Colors.white),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -321,9 +346,18 @@ class _FinancialInsightsCardState extends State<FinancialInsightsCard> {
 
     final theme = Theme.of(context);
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: FinancialGradients.cardGradient(context),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.primary.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -331,9 +365,20 @@ class _FinancialInsightsCardState extends State<FinancialInsightsCard> {
           children: [
             Row(
               children: [
-                
-                Icon(PhosphorIcons.sparkleFill,
-                    color: theme.colorScheme.secondary, size: 24),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.secondary.withOpacity(0.2),
+                        theme.colorScheme.tertiary.withOpacity(0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(PhosphorIcons.sparkleFill,
+                      color: theme.colorScheme.secondary, size: 20),
+                ),
                 const SizedBox(width: 12),
                 Text(
                   'Insights Rápidos',
@@ -346,7 +391,7 @@ class _FinancialInsightsCardState extends State<FinancialInsightsCard> {
             if (_comparisonMessage != null)
               _buildInsightRow(
                 context,
-                icon: PhosphorIcons.chartLineUp,
+                icon: PhosphorIcons.chartLineUpFill,
                 text: _comparisonMessage!,
                 
                 color: theme.colorScheme.primary,
@@ -355,7 +400,7 @@ class _FinancialInsightsCardState extends State<FinancialInsightsCard> {
             if (_topCategoryMessage != null)
               _buildInsightRow(
                 context,
-                icon: PhosphorIcons.tag,
+                icon: PhosphorIcons.tagFill,
                 text: _topCategoryMessage!,
                 
                 color: theme.colorScheme.tertiary,
@@ -371,7 +416,19 @@ class _FinancialInsightsCardState extends State<FinancialInsightsCard> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: color),
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                color.withOpacity(0.2),
+                color.withOpacity(0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 16, color: color),
+        ),
         const SizedBox(width: 16),
         Expanded(
           child: Text(

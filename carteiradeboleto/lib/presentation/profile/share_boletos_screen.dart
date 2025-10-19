@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../data/services/firestore_service.dart';
+import '../../theme/financial_gradients.dart';
 
 
 class ShareBoletosScreen extends StatelessWidget {
@@ -18,8 +19,24 @@ class ShareBoletosScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Boletos Enviados'),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF059669).withOpacity(0.1),
+                const Color(0xFFD97706).withOpacity(0.05),
+              ],
+            ),
+          ),
+        ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: FinancialGradients.backgroundSubtle(context),
+        ),
+        child: StreamBuilder<QuerySnapshot>(
         stream: firestoreService.getSentBoletoRequests(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -34,9 +51,21 @@ class ShareBoletosScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(PhosphorIcons.paperPlaneTilt,
-                      size: 80,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                          Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Icon(PhosphorIcons.paperPlaneTiltFill,
+                        size: 60,
+                        color: Theme.of(context).colorScheme.primary),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Nenhum boleto enviado ainda',
@@ -62,8 +91,28 @@ class ShareBoletosScreen extends StatelessWidget {
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: const Icon(PhosphorIcons.paperPlaneTilt),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: FinancialGradients.cardGradient(context),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                          Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      PhosphorIcons.paperPlaneTiltFill,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                   title: Text(
                     boletoData['description'] ?? 'Boleto sem descrição',
                     style: const TextStyle(fontWeight: FontWeight.bold),
@@ -83,13 +132,15 @@ class ShareBoletosScreen extends StatelessWidget {
                         ),
                     ],
                   ),
-                  trailing: _buildStatusChip(context, status, isPaid),
-                  isThreeLine: true,
+                    trailing: _buildStatusChip(context, status, isPaid),
+                    isThreeLine: true,
+                  ),
                 ),
               );
             },
           );
         },
+        ),
       ),
     );
   }
@@ -104,7 +155,7 @@ class ShareBoletosScreen extends StatelessWidget {
       case 'accepted':
         if (isPaid) {
           icon = PhosphorIcons.checkCircleFill;
-          color = Colors.green.shade700;
+          color = const Color(0xFF059669);
           label = 'Pago';
         } else {
           icon = PhosphorIcons.infoFill;
@@ -119,7 +170,7 @@ class ShareBoletosScreen extends StatelessWidget {
         break;
       default: 
         icon = PhosphorIcons.clockFill;
-        color = Colors.orange.shade800;
+        color = const Color(0xFFD97706);
         label = 'Pendente';
         break;
     }

@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // ADICIONE ESTA LINHA
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../data/services/firestore_service.dart';
+import '../../theme/financial_gradients.dart';
 
 class RequestsScreen extends StatefulWidget {
   const RequestsScreen({super.key});
@@ -64,6 +65,18 @@ class _RequestsScreenState extends State<RequestsScreen> {
               child: Scaffold(
                 appBar: AppBar(
                   title: const Text('Solicitações'),
+                  flexibleSpace: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          const Color(0xFF059669).withOpacity(0.1),
+                          const Color(0xFFD97706).withOpacity(0.05),
+                        ],
+                      ),
+                    ),
+                  ),
                   bottom: TabBar(
                     tabs: [
                       _buildTabWithBadge('Amizade', friendRequestCount),
@@ -71,11 +84,16 @@ class _RequestsScreenState extends State<RequestsScreen> {
                     ],
                   ),
                 ),
-                body: TabBarView(
-                  children: [
-                    _buildFriendRequestsList(),
-                    _buildBoletoRequestsList(),
-                  ],
+                body: Container(
+                  decoration: BoxDecoration(
+                    gradient: FinancialGradients.backgroundSubtle(context),
+                  ),
+                  child: TabBarView(
+                    children: [
+                      _buildFriendRequestsList(),
+                      _buildBoletoRequestsList(),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -103,7 +121,28 @@ class _RequestsScreenState extends State<RequestsScreen> {
           children: [
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(child: Icon(PhosphorIcons.userPlus)),
+              leading: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary.withOpacity(0.2),
+                      theme.colorScheme.tertiary.withOpacity(0.1),
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  backgroundColor: Colors.transparent,
+                  child: Icon(PhosphorIcons.userPlusFill, color: theme.colorScheme.primary),
+                ),
+              ),
               title: title,
               subtitle: subtitle,
             ),
@@ -112,20 +151,27 @@ class _RequestsScreenState extends State<RequestsScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton.icon(
-                  icon: const Icon(PhosphorIcons.xCircle),
+                  icon: const Icon(PhosphorIcons.xCircleFill),
                   label: const Text('Recusar'),
                   onPressed: onDecline,
                   style: TextButton.styleFrom(
                       foregroundColor: theme.colorScheme.error),
                 ),
                 const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  icon: const Icon(PhosphorIcons.checkCircle),
-                  label: const Text('Aceitar'),
-                  onPressed: onAccept,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade600,
-                    foregroundColor: Colors.white,
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: FinancialGradients.success,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ElevatedButton.icon(
+                    icon: const Icon(PhosphorIcons.checkCircleFill),
+                    label: const Text('Aceitar'),
+                    onPressed: onAccept,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                    ),
                   ),
                 ),
               ],

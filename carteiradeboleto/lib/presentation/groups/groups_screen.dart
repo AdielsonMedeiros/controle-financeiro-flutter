@@ -7,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../data/services/firestore_service.dart';
 import 'create_group_screen.dart';
 import 'group_details_screen.dart';
+import '../../theme/financial_gradients.dart';
 
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
@@ -25,8 +26,24 @@ class _GroupsScreenState extends State<GroupsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meus Grupos'),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF059669).withOpacity(0.1),
+                const Color(0xFFD97706).withOpacity(0.05),
+              ],
+            ),
+          ),
+        ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: FinancialGradients.backgroundSubtle(context),
+        ),
+        child: StreamBuilder<QuerySnapshot>(
         stream: _firestoreService.getGroupsStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -41,8 +58,20 @@ class _GroupsScreenState extends State<GroupsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(PhosphorIcons.usersThree,
-                      size: 80, color: theme.colorScheme.onSurfaceVariant),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.colorScheme.primary.withOpacity(0.15),
+                          theme.colorScheme.tertiary.withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Icon(PhosphorIcons.usersThreeFill,
+                        size: 60, color: theme.colorScheme.primary),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Nenhum grupo encontrado',
@@ -71,40 +100,83 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    child: Icon(PhosphorIcons.usersThreeFill),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: FinancialGradients.cardGradient(context),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  title: Text(groupName,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('$membersCount membro(s)'),
-                  trailing: const Icon(PhosphorIcons.caretRight),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => GroupDetailsScreen(
-                          groupId: groupDoc.id,
-                          groupName: groupName,
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF059669).withOpacity(0.2),
+                            const Color(0xFF0891B2).withOpacity(0.1),
+                          ],
                         ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    );
-                  },
+                      child: Icon(
+                        PhosphorIcons.usersThreeFill,
+                        color: theme.colorScheme.primary,
+                        size: 24,
+                      ),
+                    ),
+                    title: Text(groupName,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('$membersCount membro(s)'),
+                    trailing: Icon(PhosphorIcons.caretRightBold, color: theme.colorScheme.primary),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GroupDetailsScreen(
+                            groupId: groupDoc.id,
+                            groupName: groupName,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               );
             },
           );
-        },
+          },
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CreateGroupScreen()),
-          );
-        },
-        tooltip: 'Criar Grupo',
-        child: const Icon(PhosphorIcons.plus),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: FinancialGradients.success,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF059669).withOpacity(0.4),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CreateGroupScreen()),
+            );
+          },
+          tooltip: 'Criar Grupo',
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: const Icon(PhosphorIcons.plus),
+        ),
       ),
     );
   }

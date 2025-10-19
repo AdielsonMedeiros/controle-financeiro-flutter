@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../data/services/auth_service.dart';
+import '../../theme/financial_gradients.dart';
 
 class RegisterScreen extends StatefulWidget {
   final VoidCallback showLoginScreen;
@@ -119,10 +120,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: FinancialGradients.backgroundSubtle(context),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -192,10 +197,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 24),
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : ElevatedButton(
-                        style: elevatedButtonStyle,
-                        onPressed: _signUp,
-                        child: const Text('CADASTRAR'),
+                    : Container(
+                        decoration: BoxDecoration(
+                          gradient: FinancialGradients.success,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF059669).withOpacity(0.4),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          style: elevatedButtonStyle.copyWith(
+                            backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                            shadowColor: MaterialStateProperty.all(Colors.transparent),
+                          ),
+                          onPressed: _signUp,
+                          child: const Text('CADASTRAR'),
+                        ),
                       ),
                 const SizedBox(height: 8),
                 TextButton(
@@ -219,6 +240,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ],
+              ),
             ),
           ),
         ),

@@ -44,3 +44,17 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 /android/key.properties
+
+# Firebase and sensitive configuration files
+**/google-services.json
+**/GoogleService-Info.plist
+**/.env
+**/.env.local
+**/.env.production
+
+# Keystore files
+**/*.jks
+**/*.keystore
+
+# Local configuration
+**/local.properties

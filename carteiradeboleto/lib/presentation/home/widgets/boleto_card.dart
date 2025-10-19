@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../data/models/boleto_model.dart';
+import '../../../theme/financial_gradients.dart';
 
 class BoletoCard extends StatefulWidget {
   final Boleto boleto;
@@ -55,7 +56,7 @@ class _BoletoCardState extends State<BoletoCard>
     final currencyFormat =
         NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
     final statusColor =
-        widget.isOverdue ? Colors.red.shade400 : Colors.orange.shade400;
+        widget.isOverdue ? const Color(0xFFEF4444) : const Color(0xFFF59E0B);
     final statusText = widget.isOverdue ? 'ATRASADO' : 'PENDENTE';
     final statusIcon =
         widget.isOverdue ? PhosphorIcons.warningCircle : PhosphorIcons.clock;
@@ -87,32 +88,48 @@ class _BoletoCardState extends State<BoletoCard>
                 ? LinearGradient(
                     colors: isDarkMode
                         ? [
-                            Colors.red.shade900.withOpacity(0.3),
-                            Colors.red.shade800.withOpacity(0.2)
+                            const Color(0xFFEF4444).withOpacity(0.2),
+                            const Color(0xFFDC2626).withOpacity(0.1)
                           ]
                         : [
-                            Colors.red.shade50,
-                            Colors.red.shade100.withOpacity(0.5)
+                            const Color(0xFFFEF2F2),
+                            const Color(0xFFFEE2E2)
                           ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
-                : null,
-            color: widget.isOverdue ? null : theme.cardTheme.color,
+                : LinearGradient(
+                    colors: isDarkMode
+                        ? [
+                            const Color(0xFFF59E0B).withOpacity(0.15),
+                            const Color(0xFFD97706).withOpacity(0.08)
+                          ]
+                        : [
+                            const Color(0xFFFFFBEB),
+                            const Color(0xFFFEF3C7)
+                          ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
             boxShadow: [
               BoxShadow(
                 color: widget.isOverdue
-                    ? Colors.red.withOpacity(0.15)
-                    : Colors.black.withOpacity(isDarkMode ? 0.3 : 0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                    ? const Color(0xFFEF4444).withOpacity(0.2)
+                    : theme.colorScheme.primary.withOpacity(0.1),
+                blurRadius: 15,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(isDarkMode ? 0.1 : 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
             border: Border.all(
               color: widget.isOverdue
-                  ? Colors.red.withOpacity(0.4)
-                  : theme.colorScheme.outlineVariant.withOpacity(0.5),
-              width: 1.5,
+                  ? const Color(0xFFEF4444).withOpacity(0.3)
+                  : theme.colorScheme.primary.withOpacity(0.1),
+              width: 1,
             ),
           ),
           child: ClipRRect(
@@ -132,11 +149,27 @@ class _BoletoCardState extends State<BoletoCard>
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(12),
+                            gradient: widget.isOverdue
+                                ? FinancialGradients.error
+                                : LinearGradient(
+                                    colors: [
+                                      const Color(0xFFD97706).withOpacity(0.2),
+                                      const Color(0xFFF59E0B).withOpacity(0.1),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: statusColor.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Icon(
-                            PhosphorIcons.receipt,
+                            PhosphorIcons.receiptFill,
                             color: statusColor,
                             size: 24,
                           ),
@@ -159,16 +192,27 @@ class _BoletoCardState extends State<BoletoCard>
                               const SizedBox(height: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
+                                    horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(8),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      const Color(0xFF059669).withOpacity(0.15),
+                                      const Color(0xFF0891B2).withOpacity(0.1),
+                                    ],
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: theme.colorScheme.primary.withOpacity(0.2),
+                                    width: 1,
+                                  ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      PhosphorIcons.tag,
+                                      PhosphorIcons.tagFill,
                                       size: 14,
                                       color: theme.colorScheme.onPrimaryContainer,
                                     ),
@@ -228,7 +272,9 @@ class _BoletoCardState extends State<BoletoCard>
                         Text(
                           currencyFormat.format(widget.boleto.value),
                           style: theme.textTheme.headlineSmall?.copyWith(
-                            color: theme.colorScheme.primary,
+                            color: widget.isOverdue 
+                                ? const Color(0xFFEF4444) // Vermelho para atrasado
+                                : const Color(0xFFF59E0B), // Amarelo para pendente
                             fontWeight: FontWeight.bold,
                             letterSpacing: -0.5,
                           ),
@@ -247,10 +293,22 @@ class _BoletoCardState extends State<BoletoCard>
                       ),
                       child: Row(
                         children: [
-                          Icon(
-                            PhosphorIcons.calendar,
-                            size: 20,
-                            color: theme.colorScheme.onSurfaceVariant,
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  theme.colorScheme.primary.withOpacity(0.15),
+                                  theme.colorScheme.tertiary.withOpacity(0.1),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              PhosphorIcons.calendarCheckFill,
+                              size: 18,
+                              color: theme.colorScheme.primary,
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Column(
@@ -294,10 +352,22 @@ class _BoletoCardState extends State<BoletoCard>
                               ),
                               child: Row(
                                 children: [
-                                  Icon(
-                                    PhosphorIcons.barcode,
-                                    size: 20,
-                                    color: theme.colorScheme.onSurfaceVariant,
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          theme.colorScheme.secondary.withOpacity(0.15),
+                                          theme.colorScheme.tertiary.withOpacity(0.1),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      PhosphorIcons.barcodeFill,
+                                      size: 18,
+                                      color: theme.colorScheme.secondary,
+                                    ),
                                   ),
                                   const SizedBox(width: 10),
                                   Expanded(
@@ -331,45 +401,73 @@ class _BoletoCardState extends State<BoletoCard>
                       children: [
                         Row(
                           children: [
-                            IconButton(
-                              icon: Icon(PhosphorIcons.trash,
-                                  color: Colors.red.shade400, size: 22),
-                              tooltip: 'Deletar',
-                              onPressed: widget.onDelete,
-                              style: IconButton.styleFrom(
-                                backgroundColor:
-                                    Colors.red.shade50.withOpacity(0.5),
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.red.shade400.withOpacity(0.2),
+                                    Colors.red.shade300.withOpacity(0.1),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: IconButton(
+                                icon: Icon(PhosphorIcons.trashFill,
+                                    color: Colors.red.shade400, size: 22),
+                                tooltip: 'Deletar',
+                                onPressed: widget.onDelete,
                               ),
                             ),
                             const SizedBox(width: 8),
-                            IconButton(
-                              icon: Icon(PhosphorIcons.paperPlaneTilt,
-                                  color: theme.colorScheme.primary, size: 22),
-                              tooltip: 'Enviar para amigo',
-                              onPressed: widget.onSend,
-                              style: IconButton.styleFrom(
-                                backgroundColor: theme.colorScheme.primaryContainer
-                                    .withOpacity(0.5),
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    theme.colorScheme.primary.withOpacity(0.2),
+                                    theme.colorScheme.tertiary.withOpacity(0.1),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: IconButton(
+                                icon: Icon(PhosphorIcons.paperPlaneTiltFill,
+                                    color: theme.colorScheme.primary, size: 22),
+                                tooltip: 'Enviar para amigo',
+                                onPressed: widget.onSend,
                               ),
                             ),
                           ],
                         ),
-                        ElevatedButton.icon(
-                          icon: const Icon(PhosphorIcons.checkCircle, size: 20),
-                          label: const Text('Marcar como Pago'),
-                          onPressed: widget.onMarkAsPaid,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 14),
-                            backgroundColor: Colors.green.shade500,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 0,
-                            textStyle: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: FinancialGradients.success,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF10B981).withOpacity(0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton.icon(
+                            icon: const Icon(PhosphorIcons.checkCircleFill, size: 20),
+                            label: const Text('Marcar como Pago'),
+                            onPressed: widget.onMarkAsPaid,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 14),
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
                         ),

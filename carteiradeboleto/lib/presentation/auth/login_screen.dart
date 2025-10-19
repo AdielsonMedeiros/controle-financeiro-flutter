@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../data/services/auth_service.dart';
+import '../../theme/financial_gradients.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback showRegisterScreen;
@@ -221,10 +222,14 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: FinancialGradients.backgroundSubtle(context),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -303,17 +308,33 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (_isLoading)
                   const Center(child: CircularProgressIndicator())
                 else
-                  ElevatedButton(
-                    style: elevatedButtonStyle,
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _signInWith(_authService.signIn(
-                          email: _emailController.text.trim(),
-                          password: _passwordController.text.trim(),
-                        ));
-                      }
-                    },
-                    child: const Text('ENTRAR'),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: FinancialGradients.success,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF059669).withOpacity(0.4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      style: elevatedButtonStyle.copyWith(
+                        backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                        shadowColor: MaterialStateProperty.all(Colors.transparent),
+                      ),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _signInWith(_authService.signIn(
+                            email: _emailController.text.trim(),
+                            password: _passwordController.text.trim(),
+                          ));
+                        }
+                      },
+                      child: const Text('ENTRAR'),
+                    ),
                   ),
                 const SizedBox(height: 8),
                 TextButton(
@@ -381,6 +402,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
               ],
+              ),
             ),
           ),
         ),

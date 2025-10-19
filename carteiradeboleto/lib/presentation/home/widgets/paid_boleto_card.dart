@@ -192,7 +192,7 @@ class _PaidBoletoCardState extends State<PaidBoletoCard>
                               currencyFormat.format(widget.boleto.value),
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green.shade600,
+                                color: const Color(0xFF10B981), // Verde para pago
                                 fontSize: 18,
                                 letterSpacing: -0.5,
                               ),

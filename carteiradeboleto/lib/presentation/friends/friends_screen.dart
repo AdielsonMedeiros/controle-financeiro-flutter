@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../data/services/firestore_service.dart';
+import '../../theme/financial_gradients.dart';
 
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key});
@@ -83,8 +84,26 @@ class _FriendsScreenState extends State<FriendsScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Amigos')),
-      body: Column(
+      appBar: AppBar(
+        title: const Text('Amigos'),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF059669).withOpacity(0.1),
+                const Color(0xFFD97706).withOpacity(0.05),
+              ],
+            ),
+          ),
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: FinancialGradients.backgroundSubtle(context),
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
@@ -93,10 +112,27 @@ class _FriendsScreenState extends State<FriendsScreen> {
               controller: _searchController,
               decoration: inputDecorationTheme.copyWith(
                 labelText: 'Buscar usuário por e-mail',
-                prefixIcon: const Icon(PhosphorIcons.magnifyingGlass),
+                prefixIcon: Container(
+                  margin: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF059669).withOpacity(0.15),
+                        const Color(0xFF0891B2).withOpacity(0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    PhosphorIcons.magnifyingGlassBold,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(PhosphorIcons.x),
+                        icon: const Icon(PhosphorIcons.xCircleFill),
                         onPressed: () => _searchController.clear(),
                       )
                     : null,
@@ -106,7 +142,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
             ),
           ),
           Expanded(child: _buildContent()),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -124,8 +161,20 @@ class _FriendsScreenState extends State<FriendsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(PhosphorIcons.smileySad,
-                  size: 60, color: theme.colorScheme.onSurfaceVariant),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.error.withOpacity(0.15),
+                      theme.colorScheme.error.withOpacity(0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(PhosphorIcons.smileySadFill,
+                    size: 48, color: theme.colorScheme.error),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Nenhum usuário encontrado',
@@ -187,28 +236,50 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
               return Card(
                 child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: (photoURL != null && photoURL.isNotEmpty)
-                        ? NetworkImage(photoURL)
-                        : null,
-                    child: (photoURL == null || photoURL.isEmpty)
-                        ? const Icon(PhosphorIcons.user)
-                        : null,
+                  leading: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: (photoURL == null || photoURL.isEmpty)
+                          ? LinearGradient(
+                              colors: [
+                                theme.colorScheme.primary.withOpacity(0.2),
+                                theme.colorScheme.tertiary.withOpacity(0.1),
+                              ],
+                            )
+                          : null,
+                    ),
+                    child: CircleAvatar(
+                      backgroundImage: (photoURL != null && photoURL.isNotEmpty)
+                          ? NetworkImage(photoURL)
+                          : null,
+                      backgroundColor: Colors.transparent,
+                      child: (photoURL == null || photoURL.isEmpty)
+                          ? Icon(PhosphorIcons.userCircleFill, color: theme.colorScheme.primary)
+                          : null,
+                    ),
                   ),
                   title: Text(userData['displayName'] ?? user['email']),
                   subtitle: Text(user['email']),
-                  trailing: ElevatedButton(
-                    // ALTERAÇÃO: Aplica o novo estilo
-                    style: elevatedButtonStyle,
-                    child: const Text('Adicionar'),
-                    onPressed: () async {
-                      final result = await _firestoreService.sendFriendRequest(
-                          user.id, user['email']);
-                      if (mounted) {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(SnackBar(content: Text(result)));
-                      }
-                    },
+                  trailing: Container(
+                    decoration: BoxDecoration(
+                      gradient: FinancialGradients.success,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ElevatedButton(
+                      style: elevatedButtonStyle.copyWith(
+                        backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                        shadowColor: MaterialStateProperty.all(Colors.transparent),
+                      ),
+                      child: const Text('Adicionar'),
+                      onPressed: () async {
+                        final result = await _firestoreService.sendFriendRequest(
+                            user.id, user['email']);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text(result)));
+                        }
+                      },
+                    ),
                   ),
                 ),
               );
@@ -266,7 +337,21 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   return Card(
                     child: ListTile(
                       leading:
-                          const CircleAvatar(child: Icon(PhosphorIcons.user)),
+                          Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                              Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                            ],
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          backgroundColor: Colors.transparent,
+                          child: Icon(PhosphorIcons.userCircleFill, color: Theme.of(context).colorScheme.primary),
+                        ),
+                      ),
                       title: Text(displayName),
                       subtitle: Text(friendEmail),
                     ),
