@@ -316,21 +316,41 @@ class _AddBoletoDialogState extends State<AddBoletoDialog> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: ElevatedButton.icon(
-                      icon: const Icon(PhosphorIcons.check, size: 18),
-                      label: const Text('Adicionar'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: theme.colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF10B981),
+                            const Color(0xFF059669),
+                            const Color(0xFF047857),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        elevation: 2,
-                        shadowColor: theme.colorScheme.primary.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF059669).withOpacity(0.5),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      onPressed: () async {
+                      child: ElevatedButton.icon(
+                        icon: const Icon(PhosphorIcons.check, size: 18),
+                        label: const Text('Adicionar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () async {
                         if (_formKey.currentState!.validate()) {
                           final newBoleto = Boleto(
                             id: '',
@@ -366,7 +386,8 @@ class _AddBoletoDialogState extends State<AddBoletoDialog> {
                             );
                           }
                         }
-                      },
+                        },
+                      ),
                     ),
                   ),
                 ],

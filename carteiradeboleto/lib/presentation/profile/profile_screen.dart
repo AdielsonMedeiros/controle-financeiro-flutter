@@ -14,50 +14,23 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
   final _nameController = TextEditingController();
-  late AnimationController _fadeController;
-  late AnimationController _scaleController;
   late AnimationController _iconController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _iconRotation;
   late Animation<double> _iconPulse;
 
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
     _iconController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2000),
       vsync: this,
+    )..repeat(reverse: true);
+    _iconPulse = Tween<double>(begin: 0.95, end: 1.05).animate(
+      CurvedAnimation(parent: _iconController, curve: Curves.easeInOut),
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
-    );
-    _iconRotation = Tween<double>(begin: 0.0, end: 2.0).animate(
-      CurvedAnimation(parent: _iconController, curve: Curves.bounceInOut),
-    );
-    _iconPulse = Tween<double>(begin: 0.9, end: 1.3).animate(
-      CurvedAnimation(parent: _iconController, curve: Curves.bounceInOut),
-    );
-    _fadeController.forward();
-    _scaleController.forward();
-    _iconController.repeat(reverse: true);
   }
-
-
 
   Future<void> _saveProfile() async {
     final result =
@@ -71,8 +44,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   void dispose() {
     _nameController.dispose();
-    _fadeController.dispose();
-    _scaleController.dispose();
     _iconController.dispose();
     super.dispose();
   }
@@ -80,16 +51,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
     final inputDecorationTheme = InputDecoration(
       filled: true,
-      fillColor: isDarkMode
-          ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.8)
-          : theme.colorScheme.surfaceContainerHighest.withOpacity(0.6),
-      contentPadding:
-          const EdgeInsets.symmetric(vertical: 18.0, horizontal: 24.0),
+      fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(isDarkMode ? 0.8 : 0.6),
+      contentPadding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 24.0),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16.0),
         borderSide: BorderSide.none,
@@ -150,27 +117,24 @@ class _ProfileScreenState extends State<ProfileScreen>
         child: StreamBuilder<dynamic>(
           stream: _firestoreService.getUserStream(),
           builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting ||
-              !snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+            final themeProvider = context.watch<ThemeProvider>();
+            if (snapshot.connectionState == ConnectionState.waiting ||
+                !snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          final userData = snapshot.data.data() as Map<String, dynamic>;
-          final photoURL = userData['photoURL'] as String?;
-          if (_nameController.text.isEmpty) {
-            _nameController.text = userData['displayName'] ?? '';
-          }
+            final userData = snapshot.data.data() as Map<String, dynamic>;
+            final photoURL = userData['photoURL'] as String?;
+            if (_nameController.text.isEmpty) {
+              _nameController.text = userData['displayName'] ?? '';
+            }
 
-          return FadeTransition(
-            opacity: _fadeAnimation,
-            child: SingleChildScrollView(
+            return SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                Center(
-                  child: ScaleTransition(
-                    scale: _scaleAnimation,
+                  Center(
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
@@ -197,229 +161,197 @@ class _ProfileScreenState extends State<ProfileScreen>
                           child: (photoURL == null || photoURL.isEmpty)
                               ? AnimatedBuilder(
                                   animation: _iconPulse,
-                                  builder: (context, child) {
-                                    return Transform.scale(
-                                      scale: _iconPulse.value,
-                                      child: Transform.rotate(
-                                        angle: _iconRotation.value * 0.3,
-                                        child: Icon(
-                                          PhosphorIcons.user,
-                                          size: 60,
-                                          color: theme.colorScheme.onSecondaryContainer,
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                  builder: (context, child) => Transform.scale(
+                                    scale: _iconPulse.value,
+                                    child: Icon(
+                                      PhosphorIcons.user,
+                                      size: 60,
+                                      color: theme.colorScheme.onSecondaryContainer,
+                                    ),
+                                  ),
                                 )
                               : null,
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Text(
+                        userData['email'] ?? 'Carregando...',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  Container(
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: theme.colorScheme.outline.withOpacity(0.2),
-                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.colorScheme.shadow.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      userData['email'] ?? 'Carregando...',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.shadow.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _nameController,
-                    decoration: inputDecorationTheme.copyWith(
-                      labelText: 'Nome de Exibição',
-                      prefixIcon: AnimatedBuilder(
-                        animation: _iconPulse,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: 0.8 + (_iconPulse.value - 0.9) * 0.5,
-                            child: Container(
-                              margin: const EdgeInsets.all(8),
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    const Color(0xFF059669).withOpacity(0.2),
-                                    const Color(0xFF0891B2).withOpacity(0.1),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                PhosphorIcons.userCircle,
-                                color: theme.colorScheme.primary,
-                                size: 20,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: FinancialGradients.success,
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withOpacity(0.4),
-                        blurRadius: 15,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    style: elevatedButtonStyle.copyWith(
-                      backgroundColor: MaterialStateProperty.all(Colors.transparent),
-                      shadowColor: MaterialStateProperty.all(Colors.transparent),
-                      elevation: MaterialStateProperty.all(0),
-                    ),
-                    onPressed: _saveProfile,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedBuilder(
+                    child: TextField(
+                      controller: _nameController,
+                      decoration: inputDecorationTheme.copyWith(
+                        labelText: 'Nome de Exibição',
+                        prefixIcon: AnimatedBuilder(
                           animation: _iconPulse,
                           builder: (context, child) {
                             return Transform.scale(
-                              scale: 0.8 + (_iconPulse.value - 0.9) * 0.8,
-                              child: Transform.rotate(
-                                angle: _iconRotation.value * 0.2,
+                              scale: 0.8 + (_iconPulse.value - 0.9) * 0.5,
+                              child: Container(
+                                margin: const EdgeInsets.all(8),
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      const Color(0xFF059669).withOpacity(0.2),
+                                      const Color(0xFF0891B2).withOpacity(0.1),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                                 child: Icon(
-                                  PhosphorIcons.floppyDisk,
+                                  PhosphorIcons.userCircle,
+                                  color: theme.colorScheme.primary,
                                   size: 20,
                                 ),
                               ),
                             );
                           },
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'SALVAR ALTERAÇÕES',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: FinancialGradients.success,
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withOpacity(0.4),
+                          blurRadius: 15,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: FinancialGradients.cardGradient(context),
-                    borderRadius: BorderRadius.circular(20.0),
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withOpacity(0.2),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.shadow.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                    child: ElevatedButton(
+                      style: elevatedButtonStyle.copyWith(
+                        backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                        shadowColor: MaterialStateProperty.all(Colors.transparent),
+                        elevation: MaterialStateProperty.all(0),
                       ),
-                    ],
-                  ),
-                  child: SwitchListTile(
-                    title: Text(
-                      'Modo Escuro',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    subtitle: Text(
-                      themeProvider.themeMode == ThemeMode.dark
-                          ? 'Tema escuro ativado'
-                          : 'Tema claro ativado',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
-                    ),
-                    value: themeProvider.themeMode == ThemeMode.dark,
-                    onChanged: (bool value) {
-                      themeProvider.toggleTheme(value);
-                    },
-                    secondary: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(0xFF059669).withOpacity(0.15),
-                            const Color(0xFFD97706).withOpacity(0.1),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: AnimatedBuilder(
-                        animation: _iconRotation,
-                        builder: (context, child) {
-                          return Transform.rotate(
-                            angle: _iconRotation.value * 3.14159,
-                            child: Transform.scale(
-                              scale: _iconPulse.value * 0.8,
-                              child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 500),
-                                transitionBuilder: (child, animation) {
-                                  return RotationTransition(
-                                    turns: animation,
-                                    child: ScaleTransition(
-                                      scale: animation,
-                                      child: child,
-                                    ),
-                                  );
-                                },
-                                child: Icon(
-                                  themeProvider.themeMode == ThemeMode.dark
-                                      ? PhosphorIcons.moonFill
-                                      : PhosphorIcons.sunFill,
-                                  key: ValueKey(themeProvider.themeMode),
-                                  color: theme.colorScheme.primary,
-                                  size: 24,
-                                ),
+                      onPressed: _saveProfile,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AnimatedBuilder(
+                            animation: _iconPulse,
+                            builder: (context, child) => Transform.scale(
+                              scale: _iconPulse.value,
+                              child: const Icon(
+                                PhosphorIcons.floppyDisk,
+                                size: 20,
                               ),
                             ),
-                          );
-                        },
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'SALVAR ALTERAÇÕES',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
                     ),
-                    activeColor: theme.colorScheme.primary,
-                    contentPadding: EdgeInsets.zero,
                   ),
-                ),
+                  const SizedBox(height: 40),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: FinancialGradients.cardGradient(context),
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(
+                        color: theme.colorScheme.outline.withOpacity(0.2),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.colorScheme.shadow.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: SwitchListTile(
+                      title: Text(
+                        'Modo Escuro',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      subtitle: Text(
+                        themeProvider.themeMode == ThemeMode.dark
+                            ? 'Tema escuro ativado'
+                            : 'Tema claro ativado',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                      value: themeProvider.themeMode == ThemeMode.dark,
+                      onChanged: (bool value) {
+                        themeProvider.toggleTheme(value);
+                      },
+                      secondary: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF059669).withOpacity(0.15),
+                              const Color(0xFFD97706).withOpacity(0.1),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          child: Icon(
+                            themeProvider.themeMode == ThemeMode.dark
+                                ? PhosphorIcons.moonFill
+                                : PhosphorIcons.sunFill,
+                            key: ValueKey(themeProvider.themeMode),
+                            color: theme.colorScheme.primary,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                      activeColor: theme.colorScheme.primary,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
                 ],
               ),
-            ),
-          );
+            );
           },
         ),
       ),

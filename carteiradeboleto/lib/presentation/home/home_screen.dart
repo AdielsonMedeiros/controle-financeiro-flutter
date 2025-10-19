@@ -40,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   StreamSubscription? _sentBoletosSubscription;
   final List<String> _processedPaidRequests = [];
+  bool _isHeaderExpanded = false;
 
   @override
   void initState() {
@@ -177,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             }
 
             return ListView.builder(
-              padding: const EdgeInsets.fromLTRB(0, 8, 0, 80),
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 100),
               itemCount: filteredDocs.length,
               itemBuilder: (context, index) {
                 final doc = filteredDocs[index];
@@ -234,10 +235,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     return Scaffold(
       appBar: AppBar(
-        title: Image.asset(
-          'assets/icon_logo.png',
-          height: 45,
-          color: isDarkMode ? Colors.white : null,
+        title: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: child,
+          ),
+          child: _isHeaderExpanded
+              ? const SizedBox.shrink()
+              : Image.asset(
+                  'assets/icon_logo.png',
+                  height: 45,
+                  color: isDarkMode ? Colors.white : null,
+                  key: const ValueKey('logo'),
+                ),
         ),
         centerTitle: false,
         flexibleSpace: Container(
@@ -254,22 +267,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: theme.colorScheme.primary.withOpacity(0.3),
-                width: 1.5,
-              ),
-            ),
-            child: IconButton(
-              icon: const Icon(PhosphorIcons.chartBarFill),
+          if (_isHeaderExpanded)
+            _AnimatedIconButton(
+              icon: PhosphorIcons.chartBarFill,
               tooltip: 'Métricas',
               onPressed: () => Navigator.push(context,
                   MaterialPageRoute(builder: (context) => const MetricsScreen())),
+              theme: theme,
             ),
-          ),
           StreamBuilder<QuerySnapshot>(
             stream: _firestoreService.getFriendRequests(),
             builder: (context, friendSnapshot) {
@@ -284,93 +289,103 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       : 0;
                   final totalCount = friendRequestCount + boletoRequestCount;
 
-                  return Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withOpacity(0.3),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(PhosphorIcons.bellFill),
-                          tooltip: 'Solicitações',
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const RequestsScreen(),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (totalCount > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.error,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            constraints: const BoxConstraints(
-                              minWidth: 16,
-                              minHeight: 16,
-                            ),
-                            child: Text(
-                              '$totalCount',
-                              style: TextStyle(
-                                color: theme.colorScheme.onError,
-                                fontSize: 10,
+                  return _isHeaderExpanded
+                      ? Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            _AnimatedIconButton(
+                              icon: PhosphorIcons.bellFill,
+                              tooltip: 'Solicitações',
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const RequestsScreen(),
+                                ),
                               ),
-                              textAlign: TextAlign.center,
+                              theme: theme,
                             ),
-                          ),
-                        ),
-                    ],
-                  );
+                            if (totalCount > 0)
+                              Positioned(
+                                right: 8,
+                                top: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.error,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 16,
+                                    minHeight: 16,
+                                  ),
+                                  child: Text(
+                                    '$totalCount',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onError,
+                                      fontSize: 10,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        )
+                      : const SizedBox.shrink();
                 },
               );
             },
           ),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: theme.colorScheme.primary.withOpacity(0.3),
-                width: 1.5,
-              ),
-            ),
-            child: IconButton(
-              icon: const Icon(PhosphorIcons.usersThreeFill),
+          if (_isHeaderExpanded)
+            _AnimatedIconButton(
+              icon: PhosphorIcons.usersThreeFill,
               tooltip: 'Grupos',
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const GroupsScreen()),
               ),
+              theme: theme,
             ),
-          ),
+          if (_isHeaderExpanded)
+            _AnimatedIconButton(
+              icon: PhosphorIcons.usersFill,
+              tooltip: 'Amigos',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FriendsScreen()),
+              ),
+              theme: theme,
+            ),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary.withOpacity(0.2),
+                  theme.colorScheme.tertiary.withOpacity(0.1),
+                ],
+              ),
               border: Border.all(
                 color: theme.colorScheme.primary.withOpacity(0.3),
                 width: 1.5,
               ),
             ),
             child: IconButton(
-              icon: const Icon(PhosphorIcons.usersFill),
-              tooltip: 'Amigos',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const FriendsScreen()),
+              icon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, animation) => ScaleTransition(
+                  scale: animation,
+                  child: FadeTransition(opacity: animation, child: child),
+                ),
+                child: Icon(
+                  _isHeaderExpanded ? PhosphorIcons.x : PhosphorIcons.squaresFour,
+                  key: ValueKey(_isHeaderExpanded),
+                ),
               ),
+              onPressed: () => setState(() => _isHeaderExpanded = !_isHeaderExpanded),
+              tooltip: _isHeaderExpanded ? 'Fechar menu' : 'Abrir menu',
             ),
           ),
           StreamBuilder<DocumentSnapshot>(
@@ -575,20 +590,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
       ),
-      floatingActionButton: Container(
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.secondary,
+              Color(0xFF10B981),
+              Color(0xFF059669),
+              Color(0xFF047857),
             ],
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.colorScheme.primary.withOpacity(0.4),
+              color: const Color(0xFF059669).withOpacity(0.5),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -610,6 +628,77 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           elevation: 0,
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
+        ),
+      ),
+      ),
+    );
+  }
+}
+
+class _AnimatedIconButton extends StatefulWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+  final ThemeData theme;
+
+  const _AnimatedIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    required this.theme,
+  });
+
+  @override
+  State<_AnimatedIconButton> createState() => _AnimatedIconButtonState();
+}
+
+class _AnimatedIconButtonState extends State<_AnimatedIconButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.7), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 0.7, end: 1.0), weight: 50),
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _scaleAnimation,
+      builder: (context, child) => Transform.scale(
+        scale: _scaleAnimation.value,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: widget.theme.colorScheme.primary.withOpacity(0.3),
+              width: 1.5,
+            ),
+          ),
+          child: IconButton(
+            icon: Icon(widget.icon),
+            tooltip: widget.tooltip,
+            onPressed: () {
+              _controller.forward().then((_) => _controller.reset());
+              widget.onPressed();
+            },
+          ),
         ),
       ),
     );
