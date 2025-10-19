@@ -1,5 +1,6 @@
 import 'package:controlefinanceiro/screens/forgot_password_screen.dart';
 import 'package:controlefinanceiro/services/auth_service.dart';
+import 'package:controlefinanceiro/theme/design_constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -10,12 +11,38 @@ class AuthScreen extends StatefulWidget {
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateMixin {
   bool _isLoginView = true;
   bool _isLoading = false;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: DesignConstants.animationSlow,
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   Future<void> _submitAuthForm() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -135,75 +162,76 @@ class _AuthScreenState extends State<AuthScreen> {
             padding: const EdgeInsets.all(32.0),
             child: Container(
               constraints: const BoxConstraints(maxWidth: 400),
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(DesignConstants.spaceLarge),
               decoration: BoxDecoration(
                 color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(DesignConstants.radiusXLarge),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  width: 1.5,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
+                boxShadow: DesignConstants.shadowMedium(context),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                   Image.asset(
                     'assets/LOGO.png',
                     height: 80,
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    _isLoginView ? 'Bem-vindo' : 'Criar sua conta',
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _isLoginView
-                        ? 'Faça login para continuar'
-                        : 'Registre-se para começar',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: 'E-mail',
-                      prefixIcon: const Icon(Icons.email_rounded),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: DesignConstants.spaceLarge),
+                      Text(
+                        _isLoginView ? 'Bem-vindo de volta! 👋' : 'Criar sua conta 🚀',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
+                        ),
                       ),
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.surface,
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(
-                      labelText: 'Senha',
-                      prefixIcon: const Icon(Icons.lock_rounded),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: DesignConstants.spaceSmall),
+                      Text(
+                        _isLoginView
+                            ? 'Faça login para continuar'
+                            : 'Registre-se para começar',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.surface,
-                    ),
-                    obscureText: true,
-                  ),
+                      const SizedBox(height: DesignConstants.spaceXLarge),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'E-mail',
+                          hintText: 'seu@email.com',
+                          prefixIcon: const Icon(Icons.email_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(DesignConstants.radiusMedium),
+                          ),
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surface,
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: DesignConstants.spaceMedium),
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: 'Senha',
+                          hintText: '••••••••',
+                          prefixIcon: const Icon(Icons.lock_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(DesignConstants.radiusMedium),
+                          ),
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surface,
+                        ),
+                        obscureText: true,
+                      ),
                   if (_isLoginView)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
@@ -240,14 +268,13 @@ class _AuthScreenState extends State<AuthScreen> {
                           child: ElevatedButton(
                             onPressed: _submitAuthForm,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primary,
+                              backgroundColor: Theme.of(context).colorScheme.primary,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(DesignConstants.radiusMedium),
                               ),
-                              elevation: 8,
-                              shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                              elevation: DesignConstants.elevationHigh,
+                              shadowColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -338,7 +365,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ),
                   ),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

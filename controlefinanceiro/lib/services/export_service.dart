@@ -19,6 +19,9 @@ class ExportService {
   Future<void> exportTransactions({
     required List<FinancialTransaction> transactions,
     required String format, // 'CSV' ou 'PDF'
+    DateTime? startDate,
+    DateTime? endDate,
+    String? periodLabel,
   }) async {
     if (transactions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,20 +79,123 @@ class ExportService {
     final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
     final dateFormat = DateFormat('dd/MM/yyyy');
 
+    // Calcular totais
+    double totalIncome = transactions
+        .where((t) => t.type == 'income')
+        .fold(0, (sum, t) => sum + t.amount);
+    double totalExpenses = transactions
+        .where((t) => t.type == 'expense')
+        .fold(0, (sum, t) => sum + t.amount);
+    double balance = totalIncome - totalExpenses;
+
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        header: (context) => pw.Header(
-          level: 0,
-          child: pw.Text('Relatório Financeiro', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 20)),
+        margin: const pw.EdgeInsets.all(32),
+        header: (context) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              'Relatório Financeiro',
+              style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 4),
+            pw.Text(
+              'Gerado em ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}',
+              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+            ),
+            pw.Divider(thickness: 2),
+          ],
         ),
         footer: (context) => pw.Container(
           alignment: pw.Alignment.centerRight,
-          child: pw.Text('Página ${context.pageNumber} de ${context.pagesCount}', style: pw.Theme.of(context).defaultTextStyle.copyWith(color: PdfColors.grey)),
+          margin: const pw.EdgeInsets.only(top: 8),
+          child: pw.Text(
+            'Página ${context.pageNumber} de ${context.pagesCount}',
+            style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey),
+          ),
         ),
         build: (context) => [
+          // Resumo Financeiro
+          pw.Container(
+            padding: const pw.EdgeInsets.all(16),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.blue50,
+              borderRadius: pw.BorderRadius.circular(8),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  'Resumo do Período',
+                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 12),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('Receitas:', style: const pw.TextStyle(fontSize: 12)),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          currencyFormat.format(totalIncome),
+                          style: pw.TextStyle(
+                            fontSize: 16,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.green700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('Despesas:', style: const pw.TextStyle(fontSize: 12)),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          currencyFormat.format(totalExpenses),
+                          style: pw.TextStyle(
+                            fontSize: 16,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.red700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('Saldo:', style: const pw.TextStyle(fontSize: 12)),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          currencyFormat.format(balance),
+                          style: pw.TextStyle(
+                            fontSize: 16,
+                            fontWeight: pw.FontWeight.bold,
+                            color: balance >= 0 ? PdfColors.green700 : PdfColors.red700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          pw.SizedBox(height: 24),
+          // Tabela de Transações
+          pw.Text(
+            'Transações (${transactions.length})',
+            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 12),
           pw.Table.fromTextArray(
-            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            headerStyle: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.white,
+            ),
             headers: ['Data', 'Descrição', 'Categoria', 'Valor', 'Tipo'],
             data: transactions.map((t) => [
               dateFormat.format(t.createdAt),
@@ -98,10 +204,18 @@ class ExportService {
               currencyFormat.format(t.amount),
               t.type == 'expense' ? 'Despesa' : 'Receita',
             ]).toList(),
-            cellStyle: const pw.TextStyle(fontSize: 10),
+            cellStyle: const pw.TextStyle(fontSize: 9),
             cellAlignment: pw.Alignment.centerLeft,
-            headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
-          )
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.blue700),
+            cellAlignments: {
+              0: pw.Alignment.centerLeft,
+              1: pw.Alignment.centerLeft,
+              2: pw.Alignment.centerLeft,
+              3: pw.Alignment.centerRight,
+              4: pw.Alignment.center,
+            },
+            oddRowDecoration: const pw.BoxDecoration(color: PdfColors.grey100),
+          ),
         ],
       ),
     );

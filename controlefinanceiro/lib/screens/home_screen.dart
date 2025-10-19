@@ -5,12 +5,16 @@ import 'package:controlefinanceiro/models/financial_transaction.dart';
 import 'package:controlefinanceiro/providers/theme_provider.dart';
 import 'package:controlefinanceiro/services/auth_service.dart';
 import 'package:controlefinanceiro/services/firestore_service.dart';
+import 'package:controlefinanceiro/services/export_service.dart';
 import 'package:controlefinanceiro/widgets/add_transaction_form.dart';
 import 'package:controlefinanceiro/widgets/budget_section.dart';
 import 'package:controlefinanceiro/widgets/skeleton_loading.dart';
 import 'package:controlefinanceiro/widgets/monthly_chart.dart';
 import 'package:controlefinanceiro/widgets/comparison_card.dart';
 import 'package:controlefinanceiro/widgets/insights_card.dart';
+import 'package:controlefinanceiro/widgets/modern_header.dart';
+import 'package:controlefinanceiro/widgets/animated_fab.dart';
+import 'package:controlefinanceiro/widgets/transaction_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -78,29 +82,52 @@ class _HomeScreenState extends State<HomeScreen> {
         // =======================================================================
 
         return Scaffold(
+          extendBodyBehindAppBar: true,
           appBar: AppBar(
-            title: const Text('Visão Geral'),
+            title: const Text(
+              'Visão Geral',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+                letterSpacing: -0.5,
+              ),
+            ),
             centerTitle: false,
+            elevation: 0,
+            backgroundColor: Colors.transparent,
             actions: [
-              IconButton(
-                icon: Icon(
-                  themeProvider.themeMode == ThemeMode.light
-                      ? Icons.dark_mode_rounded
-                      : Icons.light_mode_rounded,
+              Container(
+                margin: const EdgeInsets.only(right: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                onPressed: () {
-                  Provider.of<ThemeProvider>(context, listen: false)
-                      .toggleTheme();
-                },
-                tooltip: 'Alternar tema',
+                child: IconButton(
+                  icon: Icon(
+                    themeProvider.themeMode == ThemeMode.light
+                        ? Icons.dark_mode_rounded
+                        : Icons.light_mode_rounded,
+                    size: 22,
+                  ),
+                  onPressed: () {
+                    Provider.of<ThemeProvider>(context, listen: false)
+                        .toggleTheme();
+                  },
+                  tooltip: 'Alternar tema',
+                ),
               ),
-              const SizedBox(width: 4),
-              IconButton(
-                icon: const Icon(Icons.logout_rounded),
-                onPressed: () => AuthService().signOut(),
-                tooltip: 'Sair',
+              Container(
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.logout_rounded, size: 22),
+                  onPressed: () => AuthService().signOut(),
+                  tooltip: 'Sair',
+                ),
               ),
-              const SizedBox(width: 8),
             ],
           ),
           body: StreamBuilder<List<FinancialTransaction>>(
@@ -147,26 +174,189 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          floatingActionButton: ScaleTransition(
-            scale: CurvedAnimation(
-              parent: const AlwaysStoppedAnimation(1.0),
-              curve: Curves.elasticOut,
-            ),
-            child: FloatingActionButton.extended(
-              onPressed: () => _showAddTransactionModal(
-                  context, allExpenseCategories, allIncomeCategories),
-              icon: const Icon(Icons.add_rounded, size: 24),
-              label: const Text('Nova', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              elevation: 8,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
+          floatingActionButton: AnimatedFAB(
+            onPressed: () => _showAddTransactionModal(
+                context, allExpenseCategories, allIncomeCategories),
+            icon: Icons.add_rounded,
+            label: 'Nova',
           ),
         );
       },
+    );
+  }
+
+  void _showExportDialog(List<FinancialTransaction> allTransactions) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Exportar Relatório'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.calendar_month),
+              title: const Text('Este Mês'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _exportPeriod(allTransactions, PeriodFilter.thisMonth);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.date_range),
+              title: const Text('Período Personalizado'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showCustomPeriodDialog(allTransactions);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.all_inclusive),
+              title: const Text('Todas as Transações'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _exportPeriod(allTransactions, PeriodFilter.allTime);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCustomPeriodDialog(List<FinancialTransaction> allTransactions) {
+    DateTime? start;
+    DateTime? end;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Selecionar Período'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text(start == null
+                    ? 'Data Inicial'
+                    : DateFormat('dd/MM/yyyy').format(start!)),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: start ?? DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now(),
+                  );
+                  if (date != null) setState(() => start = date);
+                },
+              ),
+              ListTile(
+                title: Text(end == null
+                    ? 'Data Final'
+                    : DateFormat('dd/MM/yyyy').format(end!)),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: end ?? DateTime.now(),
+                    firstDate: start ?? DateTime(2000),
+                    lastDate: DateTime.now(),
+                  );
+                  if (date != null) setState(() => end = date);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: start != null && end != null
+                  ? () {
+                      Navigator.pop(ctx);
+                      _exportCustomPeriod(allTransactions, start!, end!);
+                    }
+                  : null,
+              child: const Text('Exportar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _exportPeriod(List<FinancialTransaction> allTransactions, PeriodFilter filter) {
+    final filtered = _getFilteredTransactionsByFilter(allTransactions, filter);
+    _showFormatDialog(filtered);
+  }
+
+  void _exportCustomPeriod(List<FinancialTransaction> allTransactions, DateTime start, DateTime end) {
+    final filtered = allTransactions.where((t) {
+      return !t.createdAt.isBefore(start) &&
+          !t.createdAt.isAfter(DateTime(end.year, end.month, end.day, 23, 59, 59));
+    }).toList();
+    _showFormatDialog(filtered);
+  }
+
+  List<FinancialTransaction> _getFilteredTransactionsByFilter(
+      List<FinancialTransaction> allTransactions, PeriodFilter filter) {
+    final now = DateTime.now();
+    DateTime start;
+    DateTime end;
+
+    switch (filter) {
+      case PeriodFilter.thisMonth:
+        start = DateTime(now.year, now.month, 1);
+        end = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+        break;
+      case PeriodFilter.allTime:
+        return allTransactions;
+      default:
+        return allTransactions;
+    }
+
+    return allTransactions.where((t) {
+      return !t.createdAt.isBefore(start) && !t.createdAt.isAfter(end);
+    }).toList();
+  }
+
+  void _showFormatDialog(List<FinancialTransaction> transactions) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Escolher Formato'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf),
+              title: const Text('PDF'),
+              subtitle: const Text('Relatório completo com resumo'),
+              onTap: () {
+                Navigator.pop(ctx);
+                ExportService(context).exportTransactions(
+                  transactions: transactions,
+                  format: 'PDF',
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.table_chart),
+              title: const Text('CSV'),
+              subtitle: const Text('Planilha para Excel'),
+              onTap: () {
+                Navigator.pop(ctx);
+                ExportService(context).exportTransactions(
+                  transactions: transactions,
+                  format: 'CSV',
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -208,25 +398,47 @@ class _HomeScreenState extends State<HomeScreen> {
     final expenseTransactions =
         filteredTransactions.where((t) => t.type == 'expense').toList();
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-      children: [
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).scaffoldBackgroundColor,
+            Theme.of(context).colorScheme.primary.withOpacity(0.02),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 100, 20, 100),
+        children: [
         const SizedBox(height: 8),
-        _buildUserInfoHeader(),
-        const SizedBox(height: 24),
+        ModernHeader(
+          userName: _user?.displayName ?? _user?.email ?? 'Usuário',
+          userPhoto: _user?.photoURL,
+        ),
+        const SizedBox(height: 28),
         _buildSummaryCards(totalIncome, totalExpenses, balance),
-        const SizedBox(height: 24),
-        ComparisonCard(transactions: allTransactions),
-        const SizedBox(height: 24),
-        InsightsCard(transactions: allTransactions),
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
+        RepaintBoundary(
+          child: ComparisonCard(transactions: allTransactions),
+        ),
+        const SizedBox(height: 28),
+        RepaintBoundary(
+          child: InsightsCard(transactions: allTransactions),
+        ),
+        const SizedBox(height: 36),
         _buildSectionHeader(context, 'Evolução Mensal', Icons.show_chart_rounded),
         const SizedBox(height: 16),
-        MonthlyEvolutionChart(transactions: allTransactions),
+        RepaintBoundary(
+          child: MonthlyEvolutionChart(transactions: allTransactions),
+        ),
         const SizedBox(height: 32),
         _buildSectionHeader(context, 'Análise de Despesas', Icons.analytics_rounded),
         const SizedBox(height: 16),
-        _buildExpenseChart(expenseTransactions, totalExpenses),
+        RepaintBoundary(
+          child: _buildExpenseChart(expenseTransactions, totalExpenses),
+        ),
         const SizedBox(height: 32),
         _buildSectionHeader(context, 'Metas e Orçamentos', Icons.track_changes_rounded),
         const SizedBox(height: 16),
@@ -250,6 +462,14 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _buildSectionHeader(context, 'Transações', Icons.receipt_long_rounded),
+            IconButton(
+              icon: Icon(
+                Icons.file_download_outlined,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              onPressed: () => _showExportDialog(allTransactions),
+              tooltip: 'Exportar',
+            ),
             if (_selectedFilter != PeriodFilter.allTime)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -271,7 +491,8 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 12),
         _buildTransactionList(
             filteredTransactions, allExpenseCategories, allIncomeCategories),
-      ],
+        ],
+      ),
     );
   }
 
@@ -281,10 +502,26 @@ class _HomeScreenState extends State<HomeScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                Theme.of(context).colorScheme.primary.withOpacity(0.05),
+              ],
+            ),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+          child: ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) => LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.secondary,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ).createShader(bounds),
+            child: Icon(icon, size: 20, color: Colors.white),
+          ),
         ),
         const SizedBox(width: 12),
         Text(
@@ -340,12 +577,16 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -497,12 +738,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final List<Color> chartColors = [
-      const Color(0xFFEF4444),
-      const Color(0xFF8B5CF6),
-      const Color(0xFFF59E0B),
-      const Color(0xFF06B6D4),
-      const Color(0xFFEC4899),
-      const Color(0xFF10B981),
+      const Color(0xFF3B82F6), // Azul
+      const Color(0xFF8B5CF6), // Roxo
+      const Color(0xFF10B981), // Verde
+      const Color(0xFF06B6D4), // Ciano
+      const Color(0xFFF59E0B), // Laranja
+      const Color(0xFFEF4444), // Vermelho
+      const Color(0xFFEC4899), // Rosa
+      const Color(0xFF14B8A6), // Teal
     ];
 
     return Container(
@@ -620,104 +863,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildUserInfoHeader() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primary.withOpacity(0.15),
-            Theme.of(context).colorScheme.secondary.withOpacity(0.08),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                  Theme.of(context).colorScheme.secondary.withOpacity(0.2),
-                ],
-              ),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-                width: 3,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(3),
-            child: CircleAvatar(
-              radius: 30,
-              backgroundImage: NetworkImage(
-                _user?.photoURL ??
-                    'https://ui-avatars.com/api/?name=${_user?.email ?? 'A'}&background=4F46E5&color=fff',
-              ),
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Bem-vindo de volta!',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5)),
-                const SizedBox(height: 6),
-                Text(
-                  _user?.email ?? 'Usuário',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 17,
-                    color: Theme.of(context).colorScheme.onSurface,
-                    letterSpacing: -0.3,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.waving_hand_rounded,
-              color: Theme.of(context).colorScheme.primary,
-              size: 20,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildEmptyState() {
     return Center(
@@ -749,35 +895,138 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSummaryCards(double income, double expenses, double balance) {
-    return GridView(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.95,
-      ),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+    return Column(
       children: [
-        _SummaryCard(
-          title: 'Receitas',
-          amount: income,
-          icon: Icons.arrow_upward_rounded,
-          color: Theme.of(context).colorScheme.secondary,
+        // Card principal de saldo
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.primary.withOpacity(0.85),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Saldo Total',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [Colors.white, Color(0xFFE0E7FF)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds),
+                      child: const Icon(
+                        Icons.account_balance_wallet_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(balance),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -1,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: balance >= 0
+                      ? Colors.green.withOpacity(0.2)
+                      : Colors.red.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: balance >= 0
+                        ? Colors.green.withOpacity(0.3)
+                        : Colors.red.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      balance >= 0
+                          ? Icons.trending_up_rounded
+                          : Icons.trending_down_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      balance >= 0 ? 'Positivo' : 'Negativo',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        _SummaryCard(
-          title: 'Despesas',
-          amount: expenses,
-          icon: Icons.arrow_downward_rounded,
-          color: Theme.of(context).colorScheme.error,
-        ),
-        _SummaryCard(
-          title: 'Saldo',
-          amount: balance,
-          icon: Icons.account_balance_wallet_rounded,
-          color: balance >= 0
-              ? Theme.of(context).colorScheme.secondary
-              : Theme.of(context).colorScheme.error,
+        const SizedBox(height: 16),
+        // Cards de receitas e despesas
+        Row(
+          children: [
+            Expanded(
+              child: _SummaryCard(
+                title: 'Receitas',
+                amount: income,
+                icon: Icons.arrow_upward_rounded,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _SummaryCard(
+                title: 'Despesas',
+                amount: expenses,
+                icon: Icons.arrow_downward_rounded,
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -817,10 +1066,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: ListView.separated(
@@ -829,14 +1082,15 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: transactions.length,
         itemBuilder: (context, index) {
           final transaction = transactions[index];
-          final isIncome = transaction.type == 'income';
-          final formatter =
-              NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-
-          return Dismissible(
-            key: Key(transaction.id),
-            direction: DismissDirection.endToStart,
-            onDismissed: (direction) {
+          return TransactionItem(
+            transaction: transaction,
+            onEdit: () => _showAddTransactionModal(
+              context,
+              allExpenseCategories,
+              allIncomeCategories,
+              transaction: transaction,
+            ),
+            onDelete: () {
               _firestoreService.deleteTransaction(_user!.uid, transaction);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -848,91 +1102,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
-            background: Container(
-              color: Theme.of(context).colorScheme.error,
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: const Icon(Icons.delete_rounded, color: Colors.white),
-            ),
-            child: ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: (isIncome
-                          ? Theme.of(context).colorScheme.secondary
-                          : Theme.of(context).colorScheme.error)
-                      .withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  isIncome
-                      ? Icons.arrow_upward_rounded
-                      : Icons.arrow_downward_rounded,
-                  color: isIncome
-                      ? Theme.of(context).colorScheme.secondary
-                      : Theme.of(context).colorScheme.error,
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                transaction.description,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Text(
-                transaction.category,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 13,
-                ),
-              ),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${isIncome ? '+' : '-'} ${formatter.format(transaction.amount)}',
-                    style: TextStyle(
-                      color: isIncome
-                          ? Theme.of(context).colorScheme.secondary
-                          : Theme.of(context).colorScheme.error,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  InkWell(
-                    onTap: () {
-                      _showAddTransactionModal(
-                        context,
-                        allExpenseCategories,
-                        allIncomeCategories,
-                        transaction: transaction,
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Editar',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           );
         },
         separatorBuilder: (context, index) => Divider(
@@ -1017,26 +1186,19 @@ class _SummaryCardState extends State<_SummaryCard>
             duration: const Duration(milliseconds: 100),
             curve: Curves.easeInOut,
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    widget.color.withOpacity(0.15),
-                    widget.color.withOpacity(0.08),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: widget.color.withOpacity(0.3),
-                  width: 1.5,
+                  color: widget.color.withOpacity(0.2),
+                  width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.color.withOpacity(0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: widget.color.withOpacity(0.15),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
@@ -1046,7 +1208,7 @@ class _SummaryCardState extends State<_SummaryCard>
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: widget.color.withOpacity(0.2),
+                      color: widget.color.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
@@ -1056,7 +1218,18 @@ class _SummaryCardState extends State<_SummaryCard>
                         ),
                       ],
                     ),
-                    child: Icon(widget.icon, size: 22, color: widget.color),
+                    child: ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (bounds) => LinearGradient(
+                        colors: [
+                          widget.color,
+                          widget.color.withOpacity(0.6),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds),
+                      child: Icon(widget.icon, size: 22, color: Colors.white),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text(widget.title,

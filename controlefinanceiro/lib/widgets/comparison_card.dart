@@ -214,22 +214,17 @@ class _ComparisonItem extends StatelessWidget {
                     : (label == 'Receitas' ? Colors.red : Colors.green),
               ),
               const SizedBox(width: 4),
-              Text(
-                '${percentChange.abs().toStringAsFixed(1)}%',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isIncrease
-                      ? (label == 'Receitas' ? Colors.green : Colors.red)
-                      : (label == 'Receitas' ? Colors.red : Colors.green),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'vs mês passado',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+              Flexible(
+                child: Text(
+                  '${percentChange.abs().toStringAsFixed(1)}% vs mês passado',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isIncrease
+                        ? (label == 'Receitas' ? Colors.green : Colors.red)
+                        : (label == 'Receitas' ? Colors.red : Colors.green),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

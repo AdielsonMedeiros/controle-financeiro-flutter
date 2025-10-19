@@ -1,5 +1,6 @@
 // lib/services/auth_service.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -21,7 +22,7 @@ class AuthService {
         await user.sendEmailVerification();
       }
     } catch (e) {
-      print(e);
+      if (kDebugMode) print(e);
       rethrow;
     }
   }
@@ -33,7 +34,7 @@ class AuthService {
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
     } catch (e) {
-      print(e);
+      if (kDebugMode) print(e);
       rethrow;
     }
   }
@@ -43,11 +44,10 @@ class AuthService {
     try {
       await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
-      print(e);
+      if (kDebugMode) print(e);
       rethrow;
     }
   }
-  // ------------------------------------
 
   Future<void> signInWithGoogle() async {
     try {
@@ -66,7 +66,7 @@ class AuthService {
 
       await _auth.signInWithCredential(credential);
     } catch (e) {
-      print(e);
+      if (kDebugMode) print(e);
       rethrow;
     }
   }
@@ -76,7 +76,7 @@ class AuthService {
       GithubAuthProvider githubProvider = GithubAuthProvider();
       await _auth.signInWithProvider(githubProvider);
     } catch (e) {
-      print(e);
+      if (kDebugMode) print(e);
       rethrow;
     }
   }

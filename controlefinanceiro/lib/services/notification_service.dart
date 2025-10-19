@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/intl.dart';
@@ -61,11 +62,9 @@ class NotificationService {
   }
 
   Future<void> _setupFCM() async {
-    // Obter token FCM
     String? token = await _firebaseMessaging.getToken();
-    print('FCM Token: $token');
+    if (kDebugMode) print('FCM Token: $token');
 
-    // Lidar com mensagens quando o app está em primeiro plano
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       _showNotification(
         title: message.notification?.title ?? 'Nova notificação',
@@ -73,14 +72,13 @@ class NotificationService {
       );
     });
 
-    // Lidar com mensagens quando o app está em background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('Notificação aberta: ${message.messageId}');
+      if (kDebugMode) print('Notificação aberta: ${message.messageId}');
     });
   }
 
   void _onNotificationTap(NotificationResponse response) {
-    print('Notificação tocada: ${response.payload}');
+    if (kDebugMode) print('Notificação tocada: ${response.payload}');
   }
 
   // Mostrar notificação simples

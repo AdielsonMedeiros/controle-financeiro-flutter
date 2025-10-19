@@ -1,8 +1,7 @@
-// lib/screens/tabs_screen.dart
-
-import 'package:controlefinanceiro/screens/categories_screen.dart'; // Importe a nova tela
+import 'package:controlefinanceiro/screens/categories_screen.dart';
 import 'package:controlefinanceiro/screens/home_screen.dart';
 import 'package:controlefinanceiro/screens/reports_screen.dart';
+import 'package:controlefinanceiro/theme/design_constants.dart';
 import 'package:flutter/material.dart';
 
 class TabsScreen extends StatefulWidget {
@@ -31,28 +30,61 @@ class _TabsScreenState extends State<TabsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
+      body: AnimatedSwitcher(
+        duration: DesignConstants.animationNormal,
+        switchInCurve: Curves.easeInOut,
+        switchOutCurve: Curves.easeInOut,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.05, 0),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
+          );
+        },
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        // MODIFICADO: Adicione o novo BottomNavigationBarItem
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: 'Visão Geral',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_rounded),
-            label: 'Relatórios',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.category_rounded), // Novo ícone
-            label: 'Categorias', // Novo label
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        onTap: _onItemTapped,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_rounded),
+              activeIcon: Icon(Icons.home),
+              label: 'Início',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart_rounded),
+              activeIcon: Icon(Icons.bar_chart),
+              label: 'Relatórios',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.category_rounded),
+              activeIcon: Icon(Icons.category),
+              label: 'Categorias',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Theme.of(context).colorScheme.primary,
+          unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
+          selectedFontSize: 13,
+          unselectedFontSize: 12,
+          type: BottomNavigationBarType.fixed,
+          elevation: 0,
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }

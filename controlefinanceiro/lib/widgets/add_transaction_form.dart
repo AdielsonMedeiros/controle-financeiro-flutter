@@ -265,7 +265,9 @@ class _AddTransactionFormState extends State<AddTransactionForm>
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               validator: (v) {
                 if (v?.isEmpty ?? true) return 'Campo obrigatório';
-                if (double.tryParse(v!) == null) return 'Valor inválido';
+                final value = double.tryParse(v!);
+                if (value == null) return 'Valor inválido';
+                if (value <= 0) return 'Valor deve ser positivo';
                 return null;
               },
             ),

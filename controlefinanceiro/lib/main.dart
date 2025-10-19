@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:controlefinanceiro/providers/theme_provider.dart';
 import 'package:controlefinanceiro/screens/auth_gate.dart';
+import 'package:controlefinanceiro/services/notification_service.dart';
 import 'package:controlefinanceiro/theme/app_themes.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart'; 
 import 'package:flutter/material.dart';
@@ -13,22 +14,19 @@ import 'firebase_options.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
-  
   WidgetsFlutterBinding.ensureInitialized();
 
-  
   await initializeDateFormatting('pt_BR', null);
 
-  
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  
-  
+  // Inicializar serviço de notificações
+  await NotificationService().initialize();
+
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
-  
   runZonedGuarded<Future<void>>(() async {
     runApp(
       ChangeNotifierProvider(

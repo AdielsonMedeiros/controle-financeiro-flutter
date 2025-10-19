@@ -1,7 +1,7 @@
 name: controlefinanceiro
-description: "A new Flutter project."
+description: "Aplicativo completo para gerenciamento de finanças pessoais com gráficos, orçamentos e sincronização na nuvem."
 publish_to: "none"
-version: 0.0.2+4
+version: 0.0.5+9
 
 environment:
   sdk: ">=3.0.0 <4.0.0" # Atualizado para uma faixa mais comum
@@ -16,7 +16,6 @@ dependencies:
 
   # Gerenciamento de Estado
   provider: ^6.1.2
-  flutter_riverpod: ^2.5.1
 
   # Persistência e Utilitários
   shared_preferences: ^2.2.3
@@ -42,6 +41,7 @@ dependencies:
 
   # Notificações locais
   flutter_local_notifications: ^17.0.0
+  timezone: ^0.9.2
 
 dev_dependencies:
   flutter_test:
