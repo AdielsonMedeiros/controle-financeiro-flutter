@@ -1,7 +1,7 @@
 name: controlefinanceiro
 description: "Aplicativo completo para gerenciamento de finanças pessoais com gráficos, orçamentos e sincronização na nuvem."
 publish_to: "none"
-version: 0.0.5+9
+version: 0.0.6+11
 
 environment:
   sdk: ">=3.0.0 <4.0.0" # Atualizado para uma faixa mais comum
@@ -59,4 +59,4 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/LOGO.png"
+  image_path: "assets/logooficial.png"

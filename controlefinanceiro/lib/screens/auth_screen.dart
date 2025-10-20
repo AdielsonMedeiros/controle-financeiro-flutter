@@ -180,12 +180,12 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                     mainAxisSize: MainAxisSize.min,
                     children: [
                   Image.asset(
-                    'assets/LOGO.png',
+                    'assets/logooficial.png',
                     height: 80,
                   ),
                       const SizedBox(height: DesignConstants.spaceLarge),
                       Text(
-                        _isLoginView ? 'Bem-vindo de volta! 👋' : 'Criar sua conta 🚀',
+                        _isLoginView ? 'Controle de Gastos' : 'Criar sua conta',
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,

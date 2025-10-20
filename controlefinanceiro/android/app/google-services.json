@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "469665350572-1f03g3kif097im6o4ve3gp9auea158j6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.adielsontech.controlefinanceiro",
+            "certificate_hash": "9580f5a0d9c9d928f5a49441f2a29770d665f06b"
+          }
+        },
+        {
           "client_id": "469665350572-5atlfphm0i7dhucm2sju4guf6j3ju0s2.apps.googleusercontent.com",
           "client_type": 3
         }

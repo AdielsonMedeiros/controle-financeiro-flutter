@@ -6,7 +6,6 @@ import '../widgets/modern_header.dart';
 import '../widgets/modern_summary_section.dart';
 import '../widgets/animated_fab.dart';
 import '../widgets/animated_card.dart';
-import '../widgets/transaction_item.dart';
 import '../widgets/shimmer_loading.dart';
 
 class HomeScreenModernExample extends StatelessWidget {
